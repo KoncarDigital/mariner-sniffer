@@ -44,7 +44,7 @@ function CurrentTraffic() {
 
   return (
     <div className='App'>
-      <h1>Try to connect to backend</h1>
+      <h1>Current Traffic</h1>
       {flaskData ? (
         <div>
           <p>Data from Flask:</p>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import '../style/Login.css';
 import Select from 'react-select';
 
-function Login() {
+function Try() {
   const [customFields, setCustomFields] = useState<string[]>([]);
   const [newField, setNewField] = useState('');
   const initialFormData = {
@@ -127,7 +127,6 @@ function Login() {
         <div className="form-group">
           <label htmlFor="client_id">Client Id</label>
           <input
-            required={true}
             type="text"
             id="client_id"
             name="client_id"
@@ -261,4 +260,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Try;
