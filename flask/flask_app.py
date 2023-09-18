@@ -22,16 +22,17 @@ form_data = None
 
 #         while sommething:
 #             send_message_to_front()
-#             # yield 
+#             # yield
+#             # prouci streamanje podataka
 #     except Exception as e:
 
-@app.route('/traffic', methods=['POST'])
+@app.route('/', methods=['POST'])
 def receive_data_from_backend():
     global hat_data
     hat_data = request.json
     return jsonify({"message":"Data received successfully"})
 
-@app.route('/traffic', methods=['GET'])
+@app.route('/', methods=['GET'])
 def send_data_to_frontend():
     global hat_data
     if hat_data is not None:
@@ -49,5 +50,5 @@ def send_init_message_data_to_backend():
     if form_data is not None:
         return jsonify(form_data)
 
-if __name__ == '__main__':
-    app.run()
+# if __name__ == '__main__':
+#     app.run()
