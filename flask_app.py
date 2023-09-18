@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from server.connect_to_hat import MarinerClient
 
@@ -38,13 +38,13 @@ def send_data_to_frontend():
         return hat_data
     
 @app.route('/', methods=['POST'])
-def receive_data_from_frontend():
+def receive_init_message_data_from_frontend():
     global form_data
     form_data = request.json
-    return jsonify({"message":"Data received successfully"})
+    return jsonify({"message":"Data for init message received successfully"})
 
 @app.route('/', methods=['GET'])
-def send_data_to_backend():
+def send_init_message_data_to_backend():
     global form_data
     if form_data is not None:
         return jsonify(form_data)

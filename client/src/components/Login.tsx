@@ -138,6 +138,7 @@ function Login() {
         <div className="form-group">
           <label htmlFor="client_token">Client Token</label>
           <input
+            required={true}
             type="text"
             id="client_token"
             name="client_token"

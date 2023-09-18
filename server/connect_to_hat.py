@@ -127,7 +127,15 @@ def format_date(message_parsed):
 
 def receive_init_message_from_flask():
     init_json = {}
-    form_data = requests.get(flask_app_url).json()
+
+    try:
+        form_data = requests.get(flask_app_url)
+        if form_data.status_code != 200:
+            raise Exception(f'Request failed with status code {form_data.status_code}')
+    except Exception as e:
+        print(e)
+
+    form_data = form_data.json()
     init_json["type"] = 'init'
     init_json["client_id"] = form_data['client_id']
     init_json["client_token"] = form_data['client_token']
@@ -143,18 +151,17 @@ def receive_init_message_from_flask():
     
     # Tu se breaka ako je npr customFields prazno (['']), shvati zasto
     # Takoder je nesto krivo kod slanja init poruke jer se ne uspijeva spojiti na HAT
+    
     init_json["subscriptions"] = []
     if form_data['customFields'][0] != "":
         for subscription in form_data['customFields']:
             subscription_as_list = ast.literal_eval(subscription)
             init_json["subscriptions"].append(subscription_as_list)
-    print(form_data['selected_subscription'] == None)
-    for subscription in form_data['selected_subscription']:
-        subscription_as_list = ast.literal_eval(subscription['label'])
-        init_json["subscriptions"].append(subscription_as_list)
+    if form_data['selected_subscription'] != None:
+        for subscription in form_data['selected_subscription']:
+            subscription_as_list = ast.literal_eval(subscription['label'])
+            init_json["subscriptions"].append(subscription_as_list)
     
-    init_json = json.dumps(init_json)
-    print(init_json)
     return init_json
 
 # Primijeni donji kod na naš oblik podataka kako bi se moglo exportat u csv
