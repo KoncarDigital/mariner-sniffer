@@ -37,7 +37,7 @@ def send_data_to_frontend():
     global hat_data
     if hat_data is not None:
         return hat_data
-    
+     
 @app.route('/', methods=['POST'])
 def receive_init_message_data_from_frontend():
     global form_data
