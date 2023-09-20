@@ -1,46 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
-import io from 'socket.io-client';
+import React, { useEffect, useState } from 'react';
 
-const SOCKET_SERVER_URL = "http://127.0.0.1:5000/";
-const FLUSH_INTERVAL = 2000;  // e.g., flush every 2 seconds
-
-const Try: React.FC = () => {
-    const [data, setData] = useState<any[]>([]);
-    // This will hold our buffered data
-    const bufferRef = useRef<any[]>([]);
+function Try() {
+    const [events, setEvents] = useState<string[]>([]);
 
     useEffect(() => {
-        const socket = io(SOCKET_SERVER_URL);
+        const eventSource = new EventSource('http://127.0.0.1:5000/try');
 
-        socket.on('data', (newData: any) => {
-            // Instead of updating the state directly, we push data to the buffer
-            bufferRef.current.push(newData);
-        });
+        eventSource.onmessage = (event) => {
+            setEvents((prevEvents) => [...prevEvents, event.data]);
+        };
 
-        console.log(bufferRef)
-
-        const flushBuffer = setInterval(() => {
-            if (bufferRef.current.length > 0) {
-                setData(prevData => [...prevData, ...bufferRef.current]);
-                bufferRef.current = [];  // clear the buffer
-            }
-        }, FLUSH_INTERVAL);
+        eventSource.onerror = (error) => {
+            console.error('SSE Error:', error);
+            eventSource.close();
+        };
 
         return () => {
-            socket.disconnect();
-            clearInterval(flushBuffer);
+            eventSource.close();
         };
     }, []);
+
     return (
-      <div>
-                  {/* Render your data here */}
-                  {data.map(item => (
-      <div key={item.id}>
-                          {item.content}
-      </div>
-                  ))}
-      </div>
-          );
-      }
+        <div>
+            <h1>Streaming Events from Flask</h1>
+            <ul>
+                {events.map((event, index) => (
+                    <li key={index}>{event}</li>
+                ))}
+            </ul>
+        </div>
+    );
+}
 
 export default Try;

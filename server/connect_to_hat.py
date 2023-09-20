@@ -208,7 +208,19 @@ def format_date(message_parsed):
         dt = dt.replace(microsecond=microseconds)
         formatted_date = dt.strftime('%d.%m.%Y %H:%M:%S,%f')
 
-        message_parsed['events'][i]['timestamp']['formatted_timpstamp'] = formatted_date
+        del message_parsed['events'][i]['timestamp']
+        message_parsed['events'][i]['timestamp'] = formatted_date
+
+        if message_parsed['events'][i]['source_timestamp'] != None:
+            seconds = message_parsed['events'][i]['source_timestamp']['s']
+            microseconds = message_parsed['events'][i]['source_timestamp']['us']
+
+            dt = datetime.datetime.fromtimestamp(seconds)
+            dt = dt.replace(microsecond=microseconds)
+            formatted_date = dt.strftime('%d.%m.%Y %H:%M:%S,%f')
+
+            del message_parsed['events'][i]['source_timestamp']
+            message_parsed['events'][i]['source_timestamp'] = formatted_date
 
     return message_parsed
 
@@ -246,7 +258,7 @@ def receive_init_message_from_flask():
         
     except Exception as e:
         print(e)
-    
+
     return init_json
 
 server_ip = "10.13.5.8"
@@ -259,16 +271,15 @@ try:
     client_socket.connect((server_ip, server_port))
 
     # Primjer init poruke, inače će se ove informacije skupljati s fronta
-    # Potrebno implementirati čitanje danih init parametara s fronta
-    # init_json = {
-    #     "type": "init",
-    #     "client_id": "my_client_id",
-    #     "client_token": "myclienttoken",
-    #     "last_event_id": {"server": 1, "session": 0, "instance": 0},
-    #     "subscriptions": [['eds', 'data', '?']]
-    # }
+    init_json = {
+        "type": "init",
+        "client_id": "my_client_id",
+        "client_token": "myclienttoken",
+        "last_event_id": {"server": 1, "session": 0, "instance": 0},
+        "subscriptions": [['eds', 'data', '?']]
+    }
 
-    init_json = receive_init_message_from_flask()
+    #init_json = receive_init_message_from_flask()
     send_message_to_server(init_json)
 
     # Potrebno implementirati zaustavljanje streamanja podataka
@@ -278,7 +289,6 @@ try:
 
     while True:
         message = receive_message_from_server()
-        print(message)
 
         if not message:
             break
@@ -286,20 +296,23 @@ try:
         # Determine type of message
         message_parsed = json.loads(message.decode("utf-8"))
         message_type = message_parsed['type']
+        
+        if message_type == "events":
+            message = format_date(message_parsed)
+            print(message)
+            # Potencijalno makni for-loop. Napravljen je kako se ne bi slala lista evenata već svaki event unutar liste zasebno
+            for event in message['events']:
+                response = requests.post(flask_app_url, json=event)
+            break
+        elif message_type == "ping":
+            pong_json = {"type": "pong"}
+            send_message_to_server(pong_json)
 
         # Za izvlačenje baze tipova evenata
         # for i in range(len(message_parsed['events'])):
         #     event_type = message_parsed['events'][i]['type']
         #     if event_type not in event_types and "eds" not in event_type:
         #         event_types.append(event_type)
-        
-        if message_type == "events":
-            message = format_date(message_parsed)
-            response = requests.post(flask_app_url, json=message)
-            break
-        elif message_type == "ping":
-            pong_json = {"type": "pong"}
-            send_message_to_server(pong_json)
 
     client_socket.close()
 except socket.timeout:
