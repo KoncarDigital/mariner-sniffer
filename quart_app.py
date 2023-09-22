@@ -45,7 +45,7 @@ async def receive_init_message_data_from_frontend():
 # something = True
 # @app.route('/connect', methods=['POST'])
 
-queue = asyncio.Queue(maxsize=100)
+queue = asyncio.Queue(maxsize=10000)
 
 def callback(message):
     for event in message:

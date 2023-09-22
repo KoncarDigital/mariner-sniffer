@@ -12,22 +12,16 @@ interface FlaskData {
     data: string;
   };
   source_timestamp: number | null;
-  timestamp: {
-    formatted_timestamp: string;
-  };
+  formatted_timestamp: string;
   type: string[];
+  row_id: string;
 }
 
 function CurrentTraffic() {
 
-  // const rows = [
-  //   { id: 1, payload: 'John', timestamp: 'Doe', type: 30 },
-  //   { id: 2, payload: 'John', timestamp: 'Doe', type: 30 },
-  // ];
-
   const columns = [
     { field: 'id', headerName: 'Id', width: 400, renderCell: (params : GridRenderCellParams ) => JSON.stringify(params.row.id) },
-    { field: 'payload', headerName: 'Payload', width: 700, renderCell: (params : GridRenderCellParams ) => JSON.stringify(params.row.payload) },
+    { field: 'payload', headerName: 'Payload', width: 600, renderCell: (params : GridRenderCellParams ) => JSON.stringify(params.row.payload) },
     { field: 'source_timestamp', headerName: 'Source Timestamp', width: 200 },
     { field: 'timestamp', headerName: 'Timestamp', width: 200 },
     { field: 'type', headerName: 'Type', width: 400 }
@@ -40,6 +34,7 @@ function CurrentTraffic() {
 
     eventSource.onmessage = (event) => {
       const eventData: FlaskData = JSON.parse(event.data);
+      eventData.row_id = JSON.stringify(eventData.id)
       setEvents((prevEvents) => [...prevEvents, eventData]);
     };
 
@@ -55,8 +50,13 @@ function CurrentTraffic() {
 
   console.log(events)
 
-  if(!events) {
-    return <div>Loading...</div>;
+  if(!events || events.length === 0) {
+    return  <div>
+              <h1>Current Traffic</h1>
+              <div>
+                Loading...
+              </div>
+            </div>
   }
 
   return (
@@ -66,7 +66,16 @@ function CurrentTraffic() {
         <DataGrid
           rows={events}
           columns={columns}
+          getRowId={(row) => row.row_id}
           checkboxSelection
+          sx={{
+            boxShadow: 2,
+            '& .MuiDataGrid-cell:hover': {
+              color: 'primary.main',
+            },
+          }}
+          
+          // getRowHeight={() => 'auto'} getEstimatedRowHeight={() => 200}
         />
       </div>
     </div>
