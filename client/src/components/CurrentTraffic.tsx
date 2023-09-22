@@ -26,7 +26,7 @@ function CurrentTraffic() {
   // ];
 
   const columns = [
-    { field: 'id', headerName: 'Id', width: 300, renderCell: (params : GridRenderCellParams ) => JSON.stringify(params.row.id) },
+    { field: 'id', headerName: 'Id', width: 400, renderCell: (params : GridRenderCellParams ) => JSON.stringify(params.row.id) },
     { field: 'payload', headerName: 'Payload', width: 700, renderCell: (params : GridRenderCellParams ) => JSON.stringify(params.row.payload) },
     { field: 'source_timestamp', headerName: 'Source Timestamp', width: 200 },
     { field: 'timestamp', headerName: 'Timestamp', width: 200 },
@@ -36,7 +36,7 @@ function CurrentTraffic() {
   const [events, setEvents] = useState<FlaskData[]>([]);
 
   useEffect(() => {
-    const eventSource = new EventSource('http://127.0.0.1:5000/try');
+    const eventSource = new EventSource('http://127.0.0.1:5000/currenttraffic');
 
     eventSource.onmessage = (event) => {
       const eventData: FlaskData = JSON.parse(event.data);
@@ -61,7 +61,7 @@ function CurrentTraffic() {
 
   return (
     <div>
-      <h1>Streaming Events from Flask</h1>
+      <h1>Current Traffic</h1>
       <div>
         <DataGrid
           rows={events}

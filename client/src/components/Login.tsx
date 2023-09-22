@@ -6,6 +6,8 @@ function Login() {
   const [customFields, setCustomFields] = useState<string[]>([]);
   const [newField, setNewField] = useState('');
   const initialFormData = {
+    server_ip: '',
+    server_port: '',
     client_id: '',
     client_token: '',
     last_event_id: '',
@@ -124,6 +126,28 @@ function Login() {
     <div className="container">
       <h1>Connect</h1>
       <form onSubmit={onSubmit}>
+      <div className="form-group">
+          <label htmlFor="server_ip">Server Ip</label>
+          <input
+            required={true}
+            type="text"
+            id="server_ip"
+            name="server_ip"
+            value={formData.server_ip}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="server_port">Server Port</label>
+          <input
+            required={true}
+            type="text"
+            id="server_port"
+            name="server_port"
+            value={formData.server_port}
+            onChange={handleInputChange}
+          />
+        </div>
         <div className="form-group">
           <label htmlFor="client_id">Client Id</label>
           <input

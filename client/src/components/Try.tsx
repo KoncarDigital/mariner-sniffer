@@ -3,22 +3,22 @@ import React, { useEffect, useState } from 'react';
 function Try() {
     const [events, setEvents] = useState<string[]>([]);
 
-    useEffect(() => {
-        const eventSource = new EventSource('http://127.0.0.1:5000/try');
+    // useEffect(() => {
+    //     const eventSource = new EventSource('http://127.0.0.1:5000/try');
 
-        eventSource.onmessage = (event) => {
-            setEvents((prevEvents) => [...prevEvents, event.data]);
-        };
+    //     eventSource.onmessage = (event) => {
+    //         setEvents((prevEvents) => [...prevEvents, event.data]);
+    //     };
 
-        eventSource.onerror = (error) => {
-            console.error('SSE Error:', error);
-            eventSource.close();
-        };
+    //     eventSource.onerror = (error) => {
+    //         console.error('SSE Error:', error);
+    //         eventSource.close();
+    //     };
 
-        return () => {
-            eventSource.close();
-        };
-    }, []);
+    //     return () => {
+    //         eventSource.close();
+    //     };
+    // }, []);
 
     return (
         <div>
