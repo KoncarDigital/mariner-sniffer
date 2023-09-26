@@ -29,25 +29,52 @@ function CurrentTraffic() {
 
   const [events, setEvents] = useState<FlaskData[]>([]);
 
-  useEffect(() => {
-    const eventSource = new EventSource('http://127.0.0.1:5000/currenttraffic');
+  // useEffect(() => {
+  //   const eventSource = new EventSource('http://127.0.0.1:5000/currenttraffic');
 
-    eventSource.onmessage = (event) => {
+  //   eventSource.onmessage = (event) => {
+  //     const eventData: FlaskData = JSON.parse(event.data);
+  //     eventData.row_id = JSON.stringify(eventData.id)
+  //     setEvents((prevEvents) => [...prevEvents, eventData]);
+  //   };
+
+  //   eventSource.onerror = (error) => {
+  //     console.error('SSE Error:', error);
+  //     eventSource.close();
+  //   };
+
+  //   return () => {
+  //     eventSource.close();
+  //   };
+  // }, []);
+
+  useEffect(() => {
+    const ws = new WebSocket('ws://127.0.0.1:5000/currenttraffic');
+
+    ws.onopen = () => {
+      console.log('WebSocket connection opened: ');
+    };
+
+    ws.onmessage = (event) => {
       const eventData: FlaskData = JSON.parse(event.data);
-      eventData.row_id = JSON.stringify(eventData.id)
+      eventData.row_id = JSON.stringify(eventData.id);
       setEvents((prevEvents) => [...prevEvents, eventData]);
     };
 
-    eventSource.onerror = (error) => {
-      console.error('SSE Error:', error);
-      eventSource.close();
+    ws.onerror = (error) => {
+      console.error('WebSocket Error:', error);
+    };
+
+    ws.onclose = (event) => {
+      console.log('WebSocket connection closed:', event);
     };
 
     return () => {
-      eventSource.close();
+      ws.close();
     };
-  }, []);
 
+  }, []);
+  
   console.log(events)
 
   if(!events || events.length === 0) {
@@ -74,7 +101,6 @@ function CurrentTraffic() {
               color: 'primary.main',
             },
           }}
-          
           // getRowHeight={() => 'auto'} getEstimatedRowHeight={() => 200}
         />
       </div>

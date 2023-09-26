@@ -8,8 +8,6 @@ app = Quart(__name__)
 # Configure CORS to allow requests from the frontend origin with credentials
 cors(app)
 
-# hat_data = None
-
 init_json = {}
 form_data = {}
 @app.route('/', methods=['POST'])
@@ -42,27 +40,80 @@ async def receive_init_message_data_from_frontend():
             init_json["subscriptions"].append(subscription_as_list)
     return jsonify({"message":"Data for init message received successfully"})
 
-# something = True
-# @app.route('/connect', methods=['POST'])
-
 queue = asyncio.Queue(maxsize=10000)
 
-def callback(message):
+# async def callback(message):
+#     for event in message:
+#         await queue.put(json.dumps(event))
+#         print("Item added to queue")
+
+# async def connect():
+#     global init_json
+#     global form_data
+#     try:
+#         # client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
+#         client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '?']], {'server':1, 'session':0, 'instance':0})
+#         init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': {'server': 1, 'session': 0, 'instance': 0}, 'subscriptions': [['eds', 'data', '?']]}
+        
+#         await client.connect(init_json, callback)
+#         # Podesi uvjet za while tako da odgovara na onClick start/stop button na frontu
+#         while True:
+#             event = await queue.get()
+#             print("Item yielded")
+#             yield f"data: {event}\n\n"
+#     except Exception as e:
+#         print("Exception occured within Quark app:", e)
+
+# @app.route('/currenttraffic', methods=['GET'])
+# async def stream_hat_data_to_frontend():
+#     return Response(connect(), content_type='text/event-stream')
+
+# if __name__ == '__main__':
+#     app.run()
+
+from quart import websocket
+
+async def callback(message):
     for event in message:
-        queue.put_nowait(json.dumps(event))
+        await queue.put(json.dumps(event))
         print("Item added to queue")
 
 async def connect():
     global init_json
     global form_data
-    client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
-    client.connect(init_json, callback)
+    try:
+        # client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
+        client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '?']], {'server':1, 'session':0, 'instance':0})
+        init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': {'server': 1, 'session': 0, 'instance': 0}, 'subscriptions': [['eds', 'data', '?']]}
+        
+        await client.connect(init_json, callback)
 
-    # Podesi uvjet za while tako da odgovara na onClick start/stop button na frontu
-    while True:
-        event = await queue.get()
-        print("Item yielded")
-        yield f"data: {event}\n\n"
+        # Podesi uvjet za while tako da odgovara na onClick start/stop button na frontu
+        while True:
+            event = await queue.get()
+            await websocket.send(event)
+            print("Item yielded")
+
+    except Exception as e:
+        print("Exception occured within Quark app:", e)
+
+@app.websocket('/currenttraffic')
+async def stream_hat_data_to_frontend():
+    return await connect()
+
+if __name__ == '__main__':
+    app.run()
+
+
+
+
+
+
+
+
+
+
+
 #     try:
 #         client = MarinerClient("localst", 1234, "some_id", "some_token", [["*"]])
 #         client.connect(callback)
@@ -71,11 +122,4 @@ async def connect():
 #             send_message_to_front()
 #             # yield
 #             # prouci streamanje podataka
-#     except Exception as e:
-
-@app.route('/currenttraffic', methods=['GET'])
-def stream_hat_data_to_frontend():
-    return Response(connect(), content_type='text/event-stream')
-
-if __name__ == '__main__':
-    app.run()
+#     except Exception as e:    

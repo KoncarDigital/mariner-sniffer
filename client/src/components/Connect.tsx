@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import '../style/Login.css';
 import Select from 'react-select';
 
-function Login() {
+function Connect() {
   const [customFields, setCustomFields] = useState<string[]>([]);
   const [newField, setNewField] = useState('');
   const initialFormData = {
     server_ip: '',
     server_port: '',
-    client_id: '',
-    client_token: '',
+    client_id: 'myclientid',
+    client_token: 'myclienttoken',
     last_event_id: '',
     selected_option: 'Current events',
     show_help_text: false,
@@ -148,7 +148,7 @@ function Login() {
             onChange={handleInputChange}
           />
         </div>
-        <div className="form-group">
+        {/* <div className="form-group">
           <label htmlFor="client_id">Client Id</label>
           <input
             required={true}
@@ -169,7 +169,7 @@ function Login() {
             value={formData.client_token}
             onChange={handleInputChange}
           />
-        </div>
+        </div> */}
         <label htmlFor="last_event_id">Last Event Id</label>
         <div className="form-group special-group">
           <div className="radio-options">
@@ -199,7 +199,7 @@ function Login() {
             </label>
           </div>
 
-          <div>
+          {/* <div>
             <div className="custom-option-row">
               <label className="custom-option-label">Custom events</label>
               <div
@@ -224,7 +224,7 @@ function Login() {
               onChange={handleCustomOptionChange}
               placeholder="Enter values for server, session, and instance"
             />
-          </div>
+          </div> */}
         </div>
         <div className="form-group">
           <div className="custom-option-row">
@@ -239,7 +239,11 @@ function Login() {
               ?
               {formData.show_help_text && (
                 <div className="help-text">
-                  Entered data should match the format of options in the dropdown menu (e.g. ['eds', 'data', '?'])
+                  Entered data should match the format of options in the dropdown menu (e.g. ['eds', 'data', '?']).
+                  <br></br>
+                  The string '?' is matched with a single arbitrary string.
+                  <br></br>
+                  The string '*' is matched with any number (zero or more) of arbitrary strings.
                 </div>
               )}
             </div>
@@ -286,4 +290,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Connect;

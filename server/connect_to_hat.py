@@ -89,9 +89,7 @@ class MarinerClient():
 
         return message_parsed
 
-    def connect(self, init_json, messages_callback):
-        # server_ip = "10.13.5.8"
-        # server_port = 23014
+    async def connect(self, init_json, messages_callback):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             client_socket.connect((self.server_ip, int(self.server_port)))
@@ -102,19 +100,18 @@ class MarinerClient():
                 if not message:
                     break
 
-                # Determine type of message
                 message_parsed = json.loads(message.decode("utf-8"))
                 message_type = message_parsed['type']
                 
                 if message_type == "events":
                     message = self.format_date(message_parsed)
-                    messages_callback(message['events'])
+                    await messages_callback(message['events'])
                 elif message_type == "ping":
                     pong_json = {"type": "pong"}
-                    self.send_message_to_server(pong_json)
+                    self.send_message_to_server(pong_json) #, client_socket)
 
             client_socket.close()
         except socket.timeout:
             print("Socket timed out.")
         except Exception as e:
-            print("Exception:", e)
+            print(repr(e))
