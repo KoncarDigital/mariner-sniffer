@@ -82,9 +82,9 @@ async def connect():
     global init_json
     global form_data
     try:
-        # client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
-        client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '?']], {'server':1, 'session':0, 'instance':0})
-        init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': {'server': 1, 'session': 0, 'instance': 0}, 'subscriptions': [['eds', 'data', '?']]}
+        #client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
+        client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '*']], None)
+        init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': None, 'subscriptions': [['eds', 'data', '*']]}
         
         await client.connect(init_json, callback)
 

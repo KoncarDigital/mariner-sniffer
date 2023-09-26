@@ -1,30 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { DataGrid, GridRenderCellParams } from '@mui/x-data-grid'
+import { DataGrid, GridToolbar, GridToolbarColumnsButton } from '@mui/x-data-grid'
 
 interface FlaskData {
-  id: {
-    server: number;
-    session: number;
-    instance: number;
-  };
-  payload: {
-    type: string;
-    data: string;
-  };
-  source_timestamp: number | null;
-  formatted_timestamp: string;
+  id: string;
+  payload: string;
+  source_timestamp: Date | null;
+  formatted_timestamp: Date;
   type: string[];
   row_id: string;
+  payload_stringify: string;
 }
 
 function CurrentTraffic() {
 
   const columns = [
-    { field: 'id', headerName: 'Id', width: 400, renderCell: (params : GridRenderCellParams ) => JSON.stringify(params.row.id) },
-    { field: 'payload', headerName: 'Payload', width: 600, renderCell: (params : GridRenderCellParams ) => JSON.stringify(params.row.payload) },
-    { field: 'source_timestamp', headerName: 'Source Timestamp', width: 200 },
-    { field: 'timestamp', headerName: 'Timestamp', width: 200 },
-    { field: 'type', headerName: 'Type', width: 400 }
+    { field: 'row_id', headerName: 'Id', width: 400 },
+    { field: 'payload_stringify', headerName: 'Payload', width: 600},
+    { field: 'source_timestamp', headerName: 'Source Timestamp', width: 200, type: 'datetime' },
+    { field: 'timestamp', headerName: 'Timestamp', width: 200, type: 'datetime' },
+    { field: 'type', headerName: 'Type', width: 400, }
   ];
 
   const [events, setEvents] = useState<FlaskData[]>([]);
@@ -52,12 +46,13 @@ function CurrentTraffic() {
     const ws = new WebSocket('ws://127.0.0.1:5000/currenttraffic');
 
     ws.onopen = () => {
-      console.log('WebSocket connection opened: ');
+      console.log('WebSocket connection opened');
     };
 
     ws.onmessage = (event) => {
       const eventData: FlaskData = JSON.parse(event.data);
       eventData.row_id = JSON.stringify(eventData.id);
+      eventData.payload_stringify = JSON.stringify(eventData.payload)
       setEvents((prevEvents) => [...prevEvents, eventData]);
     };
 
@@ -101,7 +96,14 @@ function CurrentTraffic() {
               color: 'primary.main',
             },
           }}
-          // getRowHeight={() => 'auto'} getEstimatedRowHeight={() => 200}
+          slots={{ toolbar: GridToolbar }}
+          slotProps={{ toolbar: { printOptions: { disableToolbarButton: true } } }}
+          initialState={{
+            sorting: {
+              sortModel: [{ field: 'timestamp', sort: 'desc' }],
+            },
+          }}
+          getRowHeight={() => 'auto'} getEstimatedRowHeight={() => 200}
         />
       </div>
     </div>

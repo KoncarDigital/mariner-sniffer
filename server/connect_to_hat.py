@@ -113,5 +113,5 @@ class MarinerClient():
             client_socket.close()
         except socket.timeout:
             print("Socket timed out.")
-        except Exception as e:
+        except Exception as e: 
             print(repr(e))
