@@ -108,10 +108,12 @@ class MarinerClient():
                     await messages_callback(message['events'])
                 elif message_type == "ping":
                     pong_json = {"type": "pong"}
-                    self.send_message_to_server(pong_json) #, client_socket)
+                    self.send_message_to_server(pong_json, client_socket)
+                    raise Exception("Pause this thread for a second.")
 
             client_socket.close()
         except socket.timeout:
+            await messages_callback("Socket timed out.")
             print("Socket timed out.")
-        except Exception as e: 
+        except Exception as e:
             print(repr(e))

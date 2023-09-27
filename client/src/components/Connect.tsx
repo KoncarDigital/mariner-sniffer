@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../style/Login.css';
+import '../style/Connect.css';
 import Select from 'react-select';
 
 function Connect() {
@@ -283,7 +283,7 @@ function Connect() {
         </div>
 
         <hr />
-        {wait ? <span>Wait...</span> : <button onClick={() => setClickedButton('Submit')} type="submit">Submit</button>}
+        {wait ? <span>Wait...</span> : <button className='submit-button' onClick={() => setClickedButton('Submit')} type="submit">Submit</button>}
       </form>
       <div>{error}</div>
     </div>

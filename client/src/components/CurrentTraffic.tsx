@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DataGrid, GridToolbar, GridToolbarColumnsButton } from '@mui/x-data-grid'
+import { DataGrid, GridToolbar } from '@mui/x-data-grid'
 
 interface FlaskData {
   id: string;
@@ -7,14 +7,14 @@ interface FlaskData {
   source_timestamp: Date | null;
   formatted_timestamp: Date;
   type: string[];
-  row_id: string;
   payload_stringify: string;
+  id_stringify: string;
 }
 
 function CurrentTraffic() {
 
   const columns = [
-    { field: 'row_id', headerName: 'Id', width: 400 },
+    { field: 'id_stringify', headerName: 'Id', width: 400 },
     { field: 'payload_stringify', headerName: 'Payload', width: 600},
     { field: 'source_timestamp', headerName: 'Source Timestamp', width: 200, type: 'datetime' },
     { field: 'timestamp', headerName: 'Timestamp', width: 200, type: 'datetime' },
@@ -22,6 +22,16 @@ function CurrentTraffic() {
   ];
 
   const [events, setEvents] = useState<FlaskData[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [clickedButton, setClickedButton] = useState('');
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (clickedButton === 'Submit') {
+      window.location.href = '/';
+    }
+  };
 
   // useEffect(() => {
   //   const eventSource = new EventSource('http://127.0.0.1:5000/currenttraffic');
@@ -50,10 +60,14 @@ function CurrentTraffic() {
     };
 
     ws.onmessage = (event) => {
-      const eventData: FlaskData = JSON.parse(event.data);
-      eventData.row_id = JSON.stringify(eventData.id);
-      eventData.payload_stringify = JSON.stringify(eventData.payload)
-      setEvents((prevEvents) => [...prevEvents, eventData]);
+      if (event.data === '"Socket timed out."') {
+        setErrorMessage("Permission to HAT server denied.");
+      } else { 
+        const eventData: FlaskData = JSON.parse(event.data);
+        eventData.id_stringify = JSON.stringify(eventData.id);
+        eventData.payload_stringify = JSON.stringify(eventData.payload)
+        setEvents((prevEvents) => [...prevEvents, eventData]);
+      }
     };
 
     ws.onerror = (error) => {
@@ -70,25 +84,28 @@ function CurrentTraffic() {
 
   }, []);
   
-  console.log(events)
-
   if(!events || events.length === 0) {
     return  <div>
+              <form className='redirect-form' onSubmit={onSubmit}>
+                <button className='connect-button' onClick={() => setClickedButton('Submit')} type="submit">Manage subscriptions</button>
+              </form>
               <h1>Current Traffic</h1>
-              <div>
-                Loading...
-              </div>
+              {errorMessage ? <div>{errorMessage}</div> : <div>Loading...</div>}
             </div>
   }
 
   return (
     <div>
+      <form className='redirect-form' onSubmit={onSubmit}>
+        <button className='connect-button' onClick={() => setClickedButton('Submit')} type="submit">Manage subscriptions</button>
+      </form>
       <h1>Current Traffic</h1>
-      <div>
+      {errorMessage && <div>{errorMessage}</div>}
+      <div> 
         <DataGrid
           rows={events}
           columns={columns}
-          getRowId={(row) => row.row_id}
+          getRowId={(row) => row.id_stringify}
           checkboxSelection
           sx={{
             boxShadow: 2,
@@ -104,6 +121,7 @@ function CurrentTraffic() {
             },
           }}
           getRowHeight={() => 'auto'} getEstimatedRowHeight={() => 200}
+          disableDensitySelector
         />
       </div>
     </div>

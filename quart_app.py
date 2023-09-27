@@ -1,6 +1,6 @@
-from quart import Quart, jsonify, request, Response
+from quart import Quart, jsonify, request, websocket
 from quart_cors import cors
-import time, json, ast
+import json, ast
 from server.connect_to_hat import MarinerClient
 import asyncio
 
@@ -42,6 +42,62 @@ async def receive_init_message_data_from_frontend():
 
 queue = asyncio.Queue(maxsize=10000)
 
+async def callback(message):
+    if message == "Socket timed out.":
+        await asyncio.sleep(0.1)
+        await queue.put(json.dumps(message))
+        print("Permission error.")
+    else:
+        for event in message:
+            await queue.put(json.dumps(event))
+            print("Item added to queue")
+
+async def connect():
+    global init_json
+    global form_data
+    try:
+        client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
+        # client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '*']], None)
+        # init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': None, 'subscriptions': [['eds', 'data', '*']]}
+        
+        await client.connect(init_json, callback)
+
+        # Podesi uvjet za while tako da odgovara na onClick start/stop button na frontu
+        while True:
+            event = await queue.get()
+            await websocket.send(event)
+            print("Item yielded")
+            await asyncio.sleep(0.1)
+
+    except Exception as e:
+        print("Exception occured within Quark app:", e)
+
+# async def main():
+#     global init_json
+#     global form_data
+#     try:
+#         client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
+#         # client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '*']], None)
+#         # init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': None, 'subscriptions': [['eds', 'data', '*']]}
+#         await client.connect(init_json, callback)
+
+    #     producer_task = asyncio.create_task(put(queue))
+    #     consumer_task = asyncio.create_task(get(queue))
+
+    #     await asyncio.gather(producer_task, asyncio.sleep(3), consumer_task)
+
+    #     await queue.put(None)
+    # except Exception as e:
+    #     print("Exception occured within Quark app:", e)
+
+@app.websocket('/currenttraffic')
+async def stream_hat_data_to_frontend():
+    return await connect()
+
+if __name__ == '__main__':
+    app.run()
+
+
 # async def callback(message):
 #     for event in message:
 #         await queue.put(json.dumps(event))
@@ -69,57 +125,4 @@ queue = asyncio.Queue(maxsize=10000)
 #     return Response(connect(), content_type='text/event-stream')
 
 # if __name__ == '__main__':
-#     app.run()
-
-from quart import websocket
-
-async def callback(message):
-    for event in message:
-        await queue.put(json.dumps(event))
-        print("Item added to queue")
-
-async def connect():
-    global init_json
-    global form_data
-    try:
-        #client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
-        client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '*']], None)
-        init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': None, 'subscriptions': [['eds', 'data', '*']]}
-        
-        await client.connect(init_json, callback)
-
-        # Podesi uvjet za while tako da odgovara na onClick start/stop button na frontu
-        while True:
-            event = await queue.get()
-            await websocket.send(event)
-            print("Item yielded")
-
-    except Exception as e:
-        print("Exception occured within Quark app:", e)
-
-@app.websocket('/currenttraffic')
-async def stream_hat_data_to_frontend():
-    return await connect()
-
-if __name__ == '__main__':
-    app.run()
-
-
-
-
-
-
-
-
-
-
-
-#     try:
-#         client = MarinerClient("localst", 1234, "some_id", "some_token", [["*"]])
-#         client.connect(callback)
-
-#         while sommething:
-#             send_message_to_front()
-#             # yield
-#             # prouci streamanje podataka
-#     except Exception as e:    
+#     app.run() 
