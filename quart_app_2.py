@@ -1,8 +1,9 @@
 from quart import Quart, jsonify, request, websocket
 from quart_cors import cors
 import json, ast
-from server.connect_to_hat import MarinerClient
+from server.connect_to_hat_2 import MarinerClient
 import asyncio
+import socket
 
 app = Quart(__name__)
 # Configure CORS to allow requests from the frontend origin with credentials
@@ -38,38 +39,47 @@ async def receive_init_message_data_from_frontend():
         for subscription in form_data['selected_subscription']:
             subscription_as_list = ast.literal_eval(subscription['label'])
             init_json["subscriptions"].append(subscription_as_list)
+    if form_data['customFields'][0] == "" and form_data['selected_subscription'] == None:
+            init_json["subscriptions"].append(['*'])
     return jsonify({"message":"Data for init message received successfully"})
 
-queue = asyncio.Queue(maxsize=10000)
+queue = asyncio.Queue(maxsize=10)
 
-async def callback(message):
-    if message == "Socket timed out.":
-        await asyncio.sleep(0.1)
-        await queue.put(json.dumps(message))
-        print("Permission error.")
-    else:
-        for event in message:
-            await queue.put(json.dumps(event))
-            print("Item added to queue")
+async def put():
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], client_socket, init_json["last_event_id"])
+        # client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '*']], None)
+        # init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': None, 'subscriptions': [['eds', 'data', '*']]}
+
+        connection_result = await client.connect(init_json)
+        if connection_result == "Socket timed out.":
+            raise Exception("Socket timed out.")
+        while True:
+            message = await client.message()
+            if not message:
+                continue
+            for event in message:
+                await queue.put(json.dumps(event))
+                print("Item added to queue")
+    except Exception as e:
+        await queue.put(json.dumps("Socket timed out."))
+
+async def get():
+    while True:
+        event = await queue.get()
+        await websocket.send(event)
+        print("Item yielded")
 
 async def connect():
     global init_json
     global form_data
-    try:
-        client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
-        # client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '*']], None)
-        # init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': None, 'subscriptions': [['eds', 'data', '*']]}
-        
-        await client.connect(init_json, callback)
+    producer_task = asyncio.create_task(put())
+    consumer_task = asyncio.create_task(get())
 
-        # Podesi uvjet za while tako da odgovara na onClick start/stop button na frontu
-        while True:
-            event = await queue.get()
-            await websocket.send(event)
-            print("Item yielded")
+    await asyncio.gather(producer_task, asyncio.sleep(3), consumer_task)
 
-    except Exception as e:
-        print("Exception occured within Quark app:", e)
+    await queue.put(None)
 
 @app.websocket('/currenttraffic')
 async def stream_hat_data_to_frontend():

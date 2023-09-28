@@ -125,7 +125,7 @@ function Connect() {
   return (
     <div className="container">
       <h1>Connect</h1>
-      <form onSubmit={onSubmit}>
+      <form className='connect-form' onSubmit={onSubmit}>
       <div className="form-group">
           <label htmlFor="server_ip">Server Ip</label>
           <input

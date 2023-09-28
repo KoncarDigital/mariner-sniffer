@@ -62,6 +62,7 @@ function CurrentTraffic() {
     ws.onmessage = (event) => {
       if (event.data === '"Socket timed out."') {
         setErrorMessage("Permission to HAT server denied.");
+        alert("Permission to HAT server denied.")
       } else { 
         const eventData: FlaskData = JSON.parse(event.data);
         eventData.id_stringify = JSON.stringify(eventData.id);
