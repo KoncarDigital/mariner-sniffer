@@ -2,21 +2,19 @@
 
 import socket
 import json
-import time
 import datetime
-import requests
-import ast
 
 class MarinerClient():
-    def __init__(self, server_ip, server_port, client_id, client_token, subscriptions, last_event_id = None):
+    def __init__(self, server_ip, server_port, client_id, client_token, subscriptions, client_socket, last_event_id = None):
         self.server_ip = server_ip
         self.server_port = server_port
         self.client_id = client_id
         self.client_token = client_token
         self.subscriptions = subscriptions
+        self.client_socket = client_socket
         self.last_event_id = last_event_id
 
-    def send_message_to_server(self, json_message, client_socket):
+    def send_message_to_server(self, json_message):
     # Mariner message: m + k + message
 
         payload_bytes = bytes(json.dumps(json_message), "utf-8")  # message
@@ -36,14 +34,13 @@ class MarinerClient():
         for b in payload_bytes:
             arr.append(b)
 
-        client_socket.sendall(bytes(arr))
+        self.client_socket.sendall(bytes(arr))
 
     def receive_message_from_server(self, client_socket):
         m = client_socket.recv(1)
         k_length = int(hex(m[0]), 16)
 
         k = client_socket.recv(k_length)
-
         bytes_list = []
         for byte in k:
             bytes_list.append(byte)
@@ -89,32 +86,26 @@ class MarinerClient():
 
         return message_parsed
 
-    async def connect(self, init_json): # , messages_callback):
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    async def connect(self, init_json):
         try:
-            client_socket.connect((self.server_ip, int(self.server_port)))
-            self.send_message_to_server(init_json, client_socket)
-
-            while True:
-                message = self.receive_message_from_server(client_socket)
-                if not message:
-                    break
-
-                message_parsed = json.loads(message.decode("utf-8"))
-                message_type = message_parsed['type']
-                
-                if message_type == "events":
-                    message = self.format_date(message_parsed)
-                    #await messages_callback(message['events'])
-                    return message['events']
-                elif message_type == "ping":
-                    pong_json = {"type": "pong"}
-                    self.send_message_to_server(pong_json, client_socket)
-                    #raise Exception("Pause this thread for a second.")
-
-            client_socket.close()
+            self.client_socket.connect((self.server_ip, int(self.server_port)))
+            self.send_message_to_server(init_json)
         except socket.timeout:
-            #await messages_callback("Socket timed out.")
-            print("Socket timed out.")
+            return "Socket timed out."
         except Exception as e:
+            self.client_socket.close()
             print(repr(e))
+
+    async def message(self):
+        message = self.receive_message_from_server(self.client_socket)
+        if not message:
+            return
+        message_parsed = json.loads(message.decode("utf-8"))
+        message_type = message_parsed['type']
+        
+        if message_type == "events":
+            message = self.format_date(message_parsed)
+            return message['events']
+        elif message_type == "ping":
+            pong_json = {'type': 'pong'}
+            self.send_message_to_server(pong_json)

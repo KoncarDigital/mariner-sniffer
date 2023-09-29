@@ -33,25 +33,6 @@ function CurrentTraffic() {
     }
   };
 
-  // useEffect(() => {
-  //   const eventSource = new EventSource('http://127.0.0.1:5000/currenttraffic');
-
-  //   eventSource.onmessage = (event) => {
-  //     const eventData: FlaskData = JSON.parse(event.data);
-  //     eventData.row_id = JSON.stringify(eventData.id)
-  //     setEvents((prevEvents) => [...prevEvents, eventData]);
-  //   };
-
-  //   eventSource.onerror = (error) => {
-  //     console.error('SSE Error:', error);
-  //     eventSource.close();
-  //   };
-
-  //   return () => {
-  //     eventSource.close();
-  //   };
-  // }, []);
-
   useEffect(() => {
     const ws = new WebSocket('ws://127.0.0.1:5000/currenttraffic');
 
@@ -97,6 +78,7 @@ function CurrentTraffic() {
 
   return (
     <div>
+      <button className='stop-button'>Stop</button>
       <form className='redirect-form' onSubmit={onSubmit}>
         <button className='connect-button' onClick={() => setClickedButton('Submit')} type="submit">Manage subscriptions</button>
       </form>

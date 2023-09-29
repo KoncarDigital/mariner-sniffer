@@ -128,6 +128,26 @@ button:hover {
     font-weight: bold;
 }
 
+.stop-button {
+    display: block;
+    width: 5%;
+    padding: 10px;
+    background-color: red;
+    color: #fff;
+    border: none;
+    border-radius: 15px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: bold;
+    position: absolute;
+    left: 0
+}
+
+.stop-button:hover {
+    background-color: rgb(105, 2, 2);
+}
+
 .custom-option-row {
     display: flex;
     align-items: baseline;

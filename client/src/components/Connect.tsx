@@ -148,28 +148,6 @@ function Connect() {
             onChange={handleInputChange}
           />
         </div>
-        {/* <div className="form-group">
-          <label htmlFor="client_id">Client Id</label>
-          <input
-            required={true}
-            type="text"
-            id="client_id"
-            name="client_id"
-            value={formData.client_id}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="client_token">Client Token</label>
-          <input
-            required={true}
-            type="text"
-            id="client_token"
-            name="client_token"
-            value={formData.client_token}
-            onChange={handleInputChange}
-          />
-        </div> */}
         <label htmlFor="last_event_id">Last Event Id</label>
         <div className="form-group special-group">
           <div className="radio-options">

@@ -1,7 +1,7 @@
 from quart import Quart, jsonify, request, websocket
 from quart_cors import cors
 import json, ast
-from server.connect_to_hat_2 import MarinerClient
+from server.connect_to_hat import MarinerClient
 import asyncio
 import socket
 
@@ -49,8 +49,6 @@ async def put():
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], client_socket, init_json["last_event_id"])
-        # client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '*']], None)
-        # init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': None, 'subscriptions': [['eds', 'data', '*']]}
 
         connection_result = await client.connect(init_json)
         if connection_result == "Socket timed out.":
@@ -63,6 +61,7 @@ async def put():
                 await queue.put(json.dumps(event))
                 print("Item added to queue")
     except Exception as e:
+        print(e)
         await queue.put(json.dumps("Socket timed out."))
 
 async def get():
@@ -72,8 +71,6 @@ async def get():
         print("Item yielded")
 
 async def connect():
-    global init_json
-    global form_data
     producer_task = asyncio.create_task(put())
     consumer_task = asyncio.create_task(get())
 
@@ -87,33 +84,3 @@ async def stream_hat_data_to_frontend():
 
 if __name__ == '__main__':
     app.run()
-
-
-# async def callback(message):
-#     for event in message:
-#         await queue.put(json.dumps(event))
-#         print("Item added to queue")
-
-# async def connect():
-#     global init_json
-#     global form_data
-#     try:
-#         # client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], init_json["last_event_id"])
-#         client = MarinerClient("10.13.5.8", "23014", "myclientid", "myclienttoken", [['eds', 'data', '?']], {'server':1, 'session':0, 'instance':0})
-#         init_json = {'type': 'init', 'client_id': 'myclientid', 'client_token': 'myclienttoken', 'last_event_id': {'server': 1, 'session': 0, 'instance': 0}, 'subscriptions': [['eds', 'data', '?']]}
-        
-#         await client.connect(init_json, callback)
-#         # Podesi uvjet za while tako da odgovara na onClick start/stop button na frontu
-#         while True:
-#             event = await queue.get()
-#             print("Item yielded")
-#             yield f"data: {event}\n\n"
-#     except Exception as e:
-#         print("Exception occured within Quark app:", e)
-
-# @app.route('/currenttraffic', methods=['GET'])
-# async def stream_hat_data_to_frontend():
-#     return Response(connect(), content_type='text/event-stream')
-
-# if __name__ == '__main__':
-#     app.run() 
