@@ -1,16 +1,27 @@
 from quart import Quart, jsonify, request, websocket
 from quart_cors import cors
 import json, ast
-from server.connect_to_hat import MarinerClient
+from connect_to_hat import MarinerClient
 import asyncio
 import socket
+import time
 
 app = Quart(__name__)
 # Configure CORS to allow requests from the frontend origin with credentials
 cors(app)
 
+# Message sent to HAT server to initiate connection
 init_json = {}
+
+# Data gotten from a frontend form on /connect route
 form_data = {}
+
+# Initially, data is streaming on /currenttraffic route
+# It changes to False when user clicks 'Stop'
+streaming_from_hat = True
+
+queue = asyncio.Queue(maxsize=10)
+
 @app.route('/', methods=['POST'])
 async def receive_init_message_data_from_frontend():
     global init_json
@@ -43,26 +54,46 @@ async def receive_init_message_data_from_frontend():
             init_json["subscriptions"].append(['*'])
     return jsonify({"message":"Data for init message received successfully"})
 
-queue = asyncio.Queue(maxsize=10)
+@app.route('/streaming', methods=['POST'])
+def start_or_stop_streaming():
+    global streaming_from_hat
+    streaming_from_hat = not streaming_from_hat
+    return jsonify({'isStreaming': streaming_from_hat})
 
 async def put():
-    try:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], client_socket, init_json["last_event_id"])
+    global streaming_from_hat
+    client_socket = None
 
-        connection_result = await client.connect(init_json)
-        if connection_result == "Socket timed out.":
-            raise Exception("Socket timed out.")
+    try:
         while True:
-            message = await client.message()
-            if not message:
-                continue
-            for event in message:
-                await queue.put(json.dumps(event))
-                print("Item added to queue")
+            if streaming_from_hat:
+                if client_socket is None:
+                    # Initialize the client and socket only if streaming_from_hat is True
+                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], client_socket, init_json["last_event_id"])
+
+                    connection_result = await client.connect(init_json)
+                    if connection_result == "Socket timed out.":
+                        raise Exception("Socket timed out.")
+
+                message = await client.message()
+                if not message:
+                    continue
+                for event in message:
+                    await queue.put(json.dumps(event))
+                    print("Item added to queue")
+            else:
+                # Close the socket and set it to None when not streaming
+                if client_socket is not None:
+                    client_socket.close()
+                    client_socket = None
+                await asyncio.sleep(1)  # Sleep to reduce CPU usage
+
     except Exception as e:
         print(e)
         await queue.put(json.dumps("Socket timed out."))
+        if client_socket is not None:
+            client_socket.close()
 
 async def get():
     while True:

@@ -91,6 +91,7 @@ class MarinerClient():
             self.client_socket.connect((self.server_ip, int(self.server_port)))
             self.send_message_to_server(init_json)
         except socket.timeout:
+            self.client_socket.close()
             return "Socket timed out."
         except Exception as e:
             self.client_socket.close()

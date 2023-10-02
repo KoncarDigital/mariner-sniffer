@@ -24,6 +24,35 @@ function CurrentTraffic() {
   const [events, setEvents] = useState<FlaskData[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState('');
+  const [isStreaming, setIsStreaming] = useState(true);
+
+  const toggleStreaming = async () => {
+    setIsStreaming((prevState) => !prevState);
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/streaming', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        setIsStreaming(data.isStreaming);
+        console.log('Data sent successfully');
+      } else {
+        console.error('Error sending data');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    backgroundColor: isStreaming ? 'red' : 'green',
+    transition: 'gray 0.3s ease',
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +107,11 @@ function CurrentTraffic() {
 
   return (
     <div>
-      <button className='stop-button'>Stop</button>
+      <div>
+        <button className='stop-button' onClick={toggleStreaming} style={buttonStyle}>
+          {isStreaming ? 'Stop' : 'Start'}
+        </button>
+      </div>
       <form className='redirect-form' onSubmit={onSubmit}>
         <button className='connect-button' onClick={() => setClickedButton('Submit')} type="submit">Manage subscriptions</button>
       </form>

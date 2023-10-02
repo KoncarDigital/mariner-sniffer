@@ -132,7 +132,6 @@ button:hover {
     display: block;
     width: 5%;
     padding: 10px;
-    background-color: red;
     color: #fff;
     border: none;
     border-radius: 15px;
@@ -142,10 +141,6 @@ button:hover {
     font-weight: bold;
     position: absolute;
     left: 0
-}
-
-.stop-button:hover {
-    background-color: rgb(105, 2, 2);
 }
 
 .custom-option-row {
