@@ -16,6 +16,7 @@ function Connect() {
     selected_subscription: null,
     customFields: [""],
   };
+
   const [formData, setFormData] = useState(initialFormData);
   const [error, setError] = useState('');
   const [wait, setWait] = useState(false);

@@ -1,13 +1,12 @@
+from connect_to_hat import MarinerClient
 from quart import Quart, jsonify, request, websocket
 from quart_cors import cors
 import json, ast
-from connect_to_hat import MarinerClient
 import asyncio
 import socket
-import time
 
 app = Quart(__name__)
-# Configure CORS to allow requests from the frontend origin with credentials
+# Configure CORS to allow requests from the frontend origin with credentials!
 cors(app)
 
 # Message sent to HAT server to initiate connection
@@ -22,6 +21,7 @@ streaming_from_hat = True
 
 queue = asyncio.Queue(maxsize=10)
 
+# Transform form_data to proper init message format
 @app.route('/', methods=['POST'])
 async def receive_init_message_data_from_frontend():
     global init_json
@@ -54,12 +54,14 @@ async def receive_init_message_data_from_frontend():
             init_json["subscriptions"].append(['*'])
     return jsonify({"message":"Data for init message received successfully"})
 
+# Variable streaming_to_hat changes everytime Start/Stop button is clicked
 @app.route('/streaming', methods=['POST'])
 def start_or_stop_streaming():
     global streaming_from_hat
     streaming_from_hat = not streaming_from_hat
     return jsonify({'isStreaming': streaming_from_hat})
 
+# Connect to server and put message to the queue
 async def put():
     global streaming_from_hat
     client_socket = None
@@ -72,10 +74,12 @@ async def put():
                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"], init_json["client_token"], init_json["subscriptions"], client_socket, init_json["last_event_id"])
 
+                    # Check whether connection to server is established
                     connection_result = await client.connect(init_json)
                     if connection_result == "Socket timed out.":
                         raise Exception("Socket timed out.")
 
+                # Put message to the queue
                 message = await client.message()
                 if not message:
                     continue
@@ -87,7 +91,7 @@ async def put():
                 if client_socket is not None:
                     client_socket.close()
                     client_socket = None
-                await asyncio.sleep(1)  # Sleep to reduce CPU usage
+                await asyncio.sleep(1)
 
     except Exception as e:
         print(e)
@@ -95,13 +99,15 @@ async def put():
         if client_socket is not None:
             client_socket.close()
 
+# Get message from the queue and send it to frontend using websocket
 async def get():
     while True:
         event = await queue.get()
         await websocket.send(event)
         print("Item yielded")
 
-async def connect():
+# Create two separate threads to put and get from a queue simultaneously
+async def main():
     producer_task = asyncio.create_task(put())
     consumer_task = asyncio.create_task(get())
 
@@ -111,7 +117,7 @@ async def connect():
 
 @app.websocket('/currenttraffic')
 async def stream_hat_data_to_frontend():
-    return await connect()
+    return await main()
 
 if __name__ == '__main__':
     app.run()

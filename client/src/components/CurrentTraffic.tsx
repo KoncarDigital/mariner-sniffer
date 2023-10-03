@@ -50,8 +50,7 @@ function CurrentTraffic() {
   };
 
   const buttonStyle: React.CSSProperties = {
-    backgroundColor: isStreaming ? 'red' : 'green',
-    transition: 'gray 0.3s ease',
+    backgroundColor: isStreaming ? 'red' : 'rgb(25, 200, 50)'
   };
 
   const onSubmit = async (e: React.FormEvent) => {

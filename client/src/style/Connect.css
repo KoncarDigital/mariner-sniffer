@@ -137,7 +137,6 @@ button:hover {
     border-radius: 15px;
     font-size: 15px;
     cursor: pointer;
-    transition: background-color 0.2s;
     font-weight: bold;
     position: absolute;
     left: 0

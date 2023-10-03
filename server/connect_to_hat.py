@@ -14,8 +14,9 @@ class MarinerClient():
         self.client_socket = client_socket
         self.last_event_id = last_event_id
 
-    def send_message_to_server(self, json_message):
+    # Transform message to bytes and send it to HAT to either initialize (init message) or maintain connection (pong message)
     # Mariner message: m + k + message
+    def send_message_to_server(self, json_message):
 
         payload_bytes = bytes(json.dumps(json_message), "utf-8")  # message
         payload_bytes_length = len(payload_bytes)
@@ -36,6 +37,7 @@ class MarinerClient():
 
         self.client_socket.sendall(bytes(arr))
 
+    # Use socket to receive Mariner message from server
     def receive_message_from_server(self, client_socket):
         m = client_socket.recv(1)
         k_length = int(hex(m[0]), 16)
@@ -61,6 +63,7 @@ class MarinerClient():
 
         return message
 
+    # Transform properties timestamp and source_timestamp to specific format which includes microseconds (%d.%m.%Y %H:%M:%S,%f)
     def format_date(self, message_parsed):
         for i in range(len(message_parsed['events'])):
             seconds = message_parsed['events'][i]['timestamp']['s']
@@ -86,6 +89,7 @@ class MarinerClient():
 
         return message_parsed
 
+    # Connect to server
     async def connect(self, init_json):
         try:
             self.client_socket.connect((self.server_ip, int(self.server_port)))
@@ -97,6 +101,7 @@ class MarinerClient():
             self.client_socket.close()
             print(repr(e))
 
+    # Send message to Quart app or send pong message to server
     async def message(self):
         message = self.receive_message_from_server(self.client_socket)
         if not message:
