@@ -3,7 +3,9 @@ import json
 import datetime
 
 class MarinerClient():
-    def __init__(self, server_ip, server_port, client_id, client_token, subscriptions, client_socket, last_event_id = None):
+    def __init__(self, server_ip, server_port, client_id,
+                 client_token, subscriptions, client_socket,
+                 last_event_id = None):
         self.server_ip = server_ip
         self.server_port = server_port
         self.client_id = client_id
@@ -13,7 +15,8 @@ class MarinerClient():
         self.last_event_id = last_event_id
 
     def send_message_to_server(self, json_message):
-        """Transform message to bytes and send it to HAT to either initialize (init message) or maintain connection (pong message)
+        """Transform message to bytes and send it to HAT to either initialize
+            (init message) or maintain connection (pong message)
             Mariner message: m + k + message"""
         payload_bytes = bytes(json.dumps(json_message), "utf-8")  # message
         payload_bytes_length = len(payload_bytes)
@@ -61,7 +64,8 @@ class MarinerClient():
         return message
 
     def format_date(self, message_parsed):
-        """Transform properties timestamp and source_timestamp to specific format which includes microseconds (%d.%m.%Y %H:%M:%S,%f)"""
+        """Transform properties timestamp and source_timestamp to specific
+            format which includes microseconds (%d.%m.%Y %H:%M:%S,%f)"""
         for i in range(len(message_parsed['events'])):
             seconds = message_parsed['events'][i]['timestamp']['s']
             microseconds = message_parsed['events'][i]['timestamp']['us']
@@ -93,7 +97,7 @@ class MarinerClient():
             self.send_message_to_server(init_json)
         except socket.timeout:
             self.client_socket.close()
-            return "Socket timed out."
+            raise Exception("Socket timed out.")
         except Exception as e:
             self.client_socket.close()
             print(repr(e))
@@ -101,8 +105,6 @@ class MarinerClient():
     async def message(self):
         """Send message to Quart app or send pong message to server"""
         message = self.receive_message_from_server(self.client_socket)
-        if not message:
-            return
         message_parsed = json.loads(message.decode("utf-8"))
         message_type = message_parsed['type']
         

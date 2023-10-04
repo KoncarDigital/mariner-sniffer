@@ -31,10 +31,12 @@ async def receive_init_message_data_from_frontend():
         if form_data['selected_option'] == 'Current events':
             init_json["last_event_id"] = None
         elif form_data['selected_option'] == 'All-time events':
-            init_json["last_event_id"] = {"server": 1, "session": 0, "instance": 0}
+            init_json["last_event_id"] = {"server": 1, "session": 0,
+                                          "instance": 0}
     else:
         server, session, instance = form_data['last_event_id'].split(',')
-        init_json["last_event_id"] = { "server": server, "session": session, "instance": instance}
+        init_json["last_event_id"] = {"server": server, "session": session,
+                                      "instance": instance}
 
     init_json["subscriptions"] = []
     if form_data['customFields'][0] != "":
@@ -67,21 +69,21 @@ async def put():
         while True:
             if streaming_from_hat:
                 if client_socket is None:
-                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    client = MarinerClient(form_data["server_ip"], form_data["server_port"], init_json["client_id"],
-                                        init_json["client_token"], init_json["subscriptions"], client_socket, init_json["last_event_id"])
-
-                    # Check whether connection to server is established
-                    connection_result = await client.connect(init_json)
-                    if connection_result == "Socket timed out.":
-                        raise Exception("Socket timed out.")
-
+                    client_socket = socket.socket(socket.AF_INET,
+                                                  socket.SOCK_STREAM)
+                    client = MarinerClient(form_data["server_ip"],
+                                           form_data["server_port"],
+                                           init_json["client_id"], 
+                                           init_json["client_token"], 
+                                           init_json["subscriptions"], 
+                                           client_socket, 
+                                           init_json["last_event_id"])
+                    await client.connect(init_json)
                 message = await client.message()
-                if not message:
-                    continue
-                for event in message:
-                    await queue.put(json.dumps(event))
-                    print("Item added to queue")
+                if message:
+                    for event in message:
+                        await queue.put(json.dumps(event))
+                        print("Item added to queue")
             else:
                 if client_socket is not None:
                     client_socket.close()
@@ -106,7 +108,7 @@ async def main():
     producer_task = asyncio.create_task(put())
     consumer_task = asyncio.create_task(get())
 
-    await asyncio.gather(producer_task, asyncio.sleep(3), consumer_task)
+    await asyncio.gather(producer_task, consumer_task)
 
     await queue.put(None)
 

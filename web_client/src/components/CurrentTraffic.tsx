@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid'
 
-interface FlaskData {
+interface QuartData {
   id: string;
   payload: string;
   source_timestamp: Date | null;
@@ -21,7 +21,7 @@ function CurrentTraffic() {
     { field: 'type', headerName: 'Type', width: 400, }
   ];
 
-  const [events, setEvents] = useState<FlaskData[]>([]);
+  const [events, setEvents] = useState<QuartData[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState('');
   const [isStreaming, setIsStreaming] = useState(true);
@@ -70,10 +70,11 @@ function CurrentTraffic() {
 
     ws.onmessage = (event) => {
       if (event.data === '"Socket timed out."') {
-        setErrorMessage("Permission to HAT server denied.");
-        alert("Permission to HAT server denied.")
+        var error = "Permission to HAT server denied. Or connection to HAT is broken."
+        setErrorMessage(error);
+        alert(error)
       } else { 
-        const eventData: FlaskData = JSON.parse(event.data);
+        const eventData: QuartData = JSON.parse(event.data);
         eventData.id_stringify = JSON.stringify(eventData.id);
         eventData.payload_stringify = JSON.stringify(eventData.payload)
         setEvents((prevEvents) => [...prevEvents, eventData]);
@@ -96,11 +97,19 @@ function CurrentTraffic() {
   
   if(!events || events.length === 0) {
     return  <div>
+              {/* Malo čudno napravljeno ZA SADA, ali kad se stisne Stop pa Manage subscriptions,
+                onda pri povratku na rutu /currenttraffic treba stisnuti Stop kako bi se počeo prikazivati promet.
+                Potencijalno rješenje je implementirati zasebne rute na Quart appu: jedna za Start, druga za Stop */}
+              <div>
+                <button className='stop-button' onClick={toggleStreaming} style={buttonStyle}>
+                  {isStreaming ? 'Stop' : 'Start'}
+                </button>
+              </div>
               <form className='redirect-form' onSubmit={onSubmit}>
                 <button className='connect-button' onClick={() => setClickedButton('Submit')} type="submit">Manage subscriptions</button>
               </form>
               <h1>Current Traffic</h1>
-              {errorMessage ? <div>{errorMessage}</div> : <div>Loading...</div>}
+              {errorMessage ? <div>{errorMessage}</div> : <h2>Loading...</h2>}
             </div>
   }
 
@@ -135,7 +144,7 @@ function CurrentTraffic() {
               sortModel: [{ field: 'timestamp', sort: 'desc' }],
             },
           }}
-          getRowHeight={() => 'auto'} getEstimatedRowHeight={() => 200}
+          // getRowHeight={() => 'auto'} getEstimatedRowHeight={() => 200}
           disableDensitySelector
         />
       </div>
