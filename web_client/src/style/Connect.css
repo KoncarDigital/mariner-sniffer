@@ -52,7 +52,7 @@ input {
     font-weight: bold;
 }
 
-.submit-button:hover, .small-button:hover, .connect-button:hover {
+.submit-button:hover, .small-button:hover, .connect-button:hover, .recorded-traffic-button:hover, .recorded-traffic-button-2:hover {
     background-color: #0056b3;
 }
 
@@ -116,7 +116,7 @@ input {
 
 .connect-button {
     display: block;
-    width: 80%;
+    width: 8%;
     padding: 10px;
     background-color: #007bff;
     color: #fff;
@@ -126,6 +126,40 @@ input {
     cursor: pointer;
     transition: background-color 0.2s;
     font-weight: bold;
+    position: absolute;
+    right: 0;
+}
+
+.recorded-traffic-button {
+    display: block;
+    width: 5%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: bold;
+    position: absolute;
+    right: 9%;
+}
+
+.recorded-traffic-button-2 {
+    display: block;
+    width: 5%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: bold;
+    position: absolute;
+    right: 1%;
 }
 
 .start-button {
@@ -178,7 +212,7 @@ select {
     background-color: #d4d4d4;
 }
 
-.redirect-form {
-    position: absolute;
-    right: 0;
+.link {
+    text-decoration: none;
+    color: white
 }

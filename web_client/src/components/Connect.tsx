@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../style/Connect.css';
 import Select from 'react-select';
+import { Link } from "react-router-dom"
 
 function Connect() {
   const [customFields, setCustomFields] = useState<string[]>([]);
@@ -59,13 +60,13 @@ function Connect() {
     });
   };
 
-  const handleCustomOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      selected_option: '',
-      last_event_id: e.target.value,
-    });
-  };
+  // const handleCustomOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setFormData({
+  //     ...formData,
+  //     selected_option: '',
+  //     last_event_id: e.target.value,
+  //   });
+  // };
 
   const handleHelpTextHover = (hovered: boolean) => {
     setFormData({
@@ -125,6 +126,9 @@ function Connect() {
 
   return (
     <div className="container">
+      <button className='recorded-traffic-button-2'>
+        <Link to="/recordedtraffic" className='link'>Upload CSV file</Link>
+      </button>
       <h1>Connect</h1>
       <form className='connect-form' onSubmit={onSubmit}>
       <div className="form-group">

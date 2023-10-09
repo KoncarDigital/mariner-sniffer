@@ -63,10 +63,10 @@ class MarinerClient():
 
         return message
 
-    def format_date(self, message_parsed):
-        """Transform properties timestamp and source_timestamp to specific
-            format which includes microseconds (%d.%m.%Y %H:%M:%S,%f)"""
+    def format_message(self, message_parsed):
+        """Format properties timestamp, source_timestamp and type"""
         for i in range(len(message_parsed['events'])):
+            message_parsed['events'][i]['type'] = ",".join(message_parsed['events'][i]['type'])
             seconds = message_parsed['events'][i]['timestamp']['s']
             microseconds = message_parsed['events'][i]['timestamp']['us']
 
@@ -112,7 +112,7 @@ class MarinerClient():
         message_type = message_parsed['type']
         
         if message_type == "events":
-            message = self.format_date(message_parsed)
+            message = self.format_message(message_parsed)
             return message['events']
         elif message_type == "ping":
             pong_json = {'type': 'pong'}

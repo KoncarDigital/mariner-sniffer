@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar, GridValueGetterParams } from '@mui/x-data-grid'
+import { Link } from "react-router-dom";
 
 interface QuartData {
   id: string;
@@ -10,7 +11,7 @@ interface QuartData {
   time: string;
   source_date: Date | null;
   source_time: string | null;
-  type: string[];
+  type: string;
   payload_stringify: string;
   id_stringify: string;
 }
@@ -53,7 +54,7 @@ function CurrentTraffic() {
       type: 'time',
       valueGetter: (params: GridValueGetterParams<QuartData>) => params.row.time,
     },
-    { field: 'type', headerName: 'Type', width: 400 },
+    { field: 'type', headerName: 'Type', width: 300 },
   ];
   
   const [events, setEvents] = useState<QuartData[]>([]);
@@ -176,6 +177,9 @@ function CurrentTraffic() {
       <form className='redirect-form' onSubmit={onSubmit}>
         <button className='connect-button' onClick={() => setClickedButton('Submit')} type="submit">Manage subscriptions</button>
       </form>
+      <button className='recorded-traffic-button'>
+        <Link to="/recordedtraffic" className='link'>Upload CSV file</Link>
+      </button>
       <h1>Current Traffic</h1>
       {errorMessage && <div>{errorMessage}</div>}
       <div> 
