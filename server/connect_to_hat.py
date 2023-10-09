@@ -72,10 +72,12 @@ class MarinerClient():
 
             dt = datetime.datetime.fromtimestamp(seconds)
             dt = dt.replace(microsecond=microseconds)
-            formatted_date = dt.strftime('%d.%m.%Y %H:%M:%S,%f')
+            formatted_date = dt.strftime('%m/%d/%Y')
+            formatted_time = dt.strftime('%H:%M:%S,%f')
 
             del message_parsed['events'][i]['timestamp']
-            message_parsed['events'][i]['timestamp'] = formatted_date
+            message_parsed['events'][i]['date'] = formatted_date
+            message_parsed['events'][i]['time'] = formatted_time
 
             if message_parsed['events'][i]['source_timestamp'] != None:
                 seconds = message_parsed['events'][i]['source_timestamp']['s']
@@ -83,11 +85,12 @@ class MarinerClient():
 
                 dt = datetime.datetime.fromtimestamp(seconds)
                 dt = dt.replace(microsecond=microseconds)
-                formatted_date = dt.strftime('%d.%m.%Y %H:%M:%S,%f')
+                formatted_date = dt.strftime('%m/%d/%Y')
+                formatted_time = dt.strftime('%H:%M:%S,%f')
 
                 del message_parsed['events'][i]['source_timestamp']
-                message_parsed['events'][i]['source_timestamp'] = formatted_date
-
+                message_parsed['events'][i]['source_date'] = formatted_date
+                message_parsed['events'][i]['source_time'] = formatted_time
         return message_parsed
 
     async def connect(self, init_json):

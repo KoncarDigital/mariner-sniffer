@@ -14,7 +14,7 @@ init_json = {}
 # Data obtained from a frontend form on the /connect route
 form_data = {}
 # Indicates whether data is currently streaming from the HAT server
-streaming_from_hat = True
+streaming_from_hat = ""
 
 @app.route('/', methods=['POST'])
 async def receive_init_message_data_from_frontend():
@@ -51,12 +51,25 @@ async def receive_init_message_data_from_frontend():
             init_json["subscriptions"].append(['*'])
     return jsonify({"message":"Data for init message received successfully"})
 
-@app.route('/streaming', methods=['POST'])
-def start_or_stop_streaming():
-    """Variable streaming_to_hat changes everytime Start/Stop button is clicked"""
-    global streaming_from_hat
-    streaming_from_hat = not streaming_from_hat
-    return jsonify({'isStreaming': streaming_from_hat})
+@app.route('/start', methods=['POST'])
+async def start_streaming():
+    try:
+        global streaming_from_hat
+        data = await request.json
+        streaming_from_hat = data['action']
+        return 'Streaming started successfully', 200
+    except Exception as e:
+        return str(e), 400
+
+@app.route('/stop', methods=['POST'])
+async def stop_streaming():
+    try:
+        global streaming_from_hat
+        data = await request.json
+        streaming_from_hat = data['action']
+        return 'Streaming stopped successfully', 200
+    except Exception as e:
+        return str(e), 400
 
 async def put():
     """Connect to server and put message to the queue"""
@@ -67,7 +80,7 @@ async def put():
 
     try:
         while True:
-            if streaming_from_hat:
+            if streaming_from_hat == 'start':
                 if client_socket is None:
                     client_socket = socket.socket(socket.AF_INET,
                                                   socket.SOCK_STREAM)

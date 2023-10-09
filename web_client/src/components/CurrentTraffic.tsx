@@ -1,46 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid'
+import { DataGrid, GridToolbar, GridValueGetterParams } from '@mui/x-data-grid'
 
 interface QuartData {
   id: string;
   payload: string;
   source_timestamp: Date | null;
   formatted_timestamp: Date;
+  date: Date;
+  time: string;
+  source_date: Date | null;
+  source_time: string | null;
   type: string[];
   payload_stringify: string;
   id_stringify: string;
 }
 
 function CurrentTraffic() {
-
+  
   const columns = [
     { field: 'id_stringify', headerName: 'Id', width: 400 },
-    { field: 'payload_stringify', headerName: 'Payload', width: 600},
-    { field: 'source_timestamp', headerName: 'Source Timestamp', width: 200, type: 'datetime' },
-    { field: 'timestamp', headerName: 'Timestamp', width: 200, type: 'datetime' },
-    { field: 'type', headerName: 'Type', width: 400, }
+    { field: 'payload_stringify', headerName: 'Payload', width: 600 },
+    {
+      field: 'source_date',
+      headerName: 'Source Date',
+      width: 100,
+      type: 'date',
+      valueGetter: (params: GridValueGetterParams<QuartData>) => {
+        if (!params.row.source_date) return null
+        return new Date(params.row.source_date);
+      },
+    },
+    {
+      field: 'source_time',
+      headerName: 'Source Time',
+      width: 150,
+      type: 'time',
+      valueGetter: (params: GridValueGetterParams<QuartData>) => params.row.source_time,
+    },
+    {
+      field: 'date',
+      headerName: 'Date',
+      width: 100,
+      type: 'date',
+      valueGetter: (params: GridValueGetterParams<QuartData>) => {
+        return new Date(params.row.date);
+      },
+    },
+    {
+      field: 'time',
+      headerName: 'Time',
+      width: 150,
+      type: 'time',
+      valueGetter: (params: GridValueGetterParams<QuartData>) => params.row.time,
+    },
+    { field: 'type', headerName: 'Type', width: 400 },
   ];
-
+  
   const [events, setEvents] = useState<QuartData[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [clickedButton, setClickedButton] = useState('');
   const [isStreaming, setIsStreaming] = useState(true);
 
-  const toggleStreaming = async () => {
-    setIsStreaming((prevState) => !prevState);
-
+  const handleStartClick = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/streaming', {
+      const startData = {
+        action: 'start'
+      };
+
+      const response = await fetch('http://127.0.0.1:5000/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(startData),
       });
-  
+
       if (response.ok) {
-        const data = await response.json();
-        setIsStreaming(data.isStreaming);
-        console.log('Data sent successfully');
+        setIsStreaming(true);
       } else {
         console.error('Error sending data');
       }
@@ -49,8 +85,28 @@ function CurrentTraffic() {
     }
   };
 
-  const buttonStyle: React.CSSProperties = {
-    backgroundColor: isStreaming ? 'red' : 'rgb(25, 200, 50)'
+  const handleStopClick = async () => {
+    try {
+      const stopData = {
+        action: 'stop'
+      };
+
+      const response = await fetch('http://127.0.0.1:5000/stop', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(stopData),
+      });
+
+      if (response.ok) {
+        setIsStreaming(false);
+      } else {
+        console.error('Error sending data');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -58,10 +114,12 @@ function CurrentTraffic() {
 
     if (clickedButton === 'Submit') {
       window.location.href = '/';
+      setIsStreaming(false)
     }
   };
 
   useEffect(() => {
+    handleStartClick();
     const ws = new WebSocket('ws://127.0.0.1:5000/currenttraffic');
 
     ws.onopen = () => {
@@ -97,13 +155,9 @@ function CurrentTraffic() {
   
   if(!events || events.length === 0) {
     return  <div>
-              {/* Malo čudno napravljeno ZA SADA, ali kad se stisne Stop pa Manage subscriptions,
-                onda pri povratku na rutu /currenttraffic treba stisnuti Stop kako bi se počeo prikazivati promet.
-                Potencijalno rješenje je implementirati zasebne rute na Quart appu: jedna za Start, druga za Stop */}
               <div>
-                <button className='stop-button' onClick={toggleStreaming} style={buttonStyle}>
-                  {isStreaming ? 'Stop' : 'Start'}
-                </button>
+                <button onClick={handleStartClick} disabled={isStreaming} className='start-button'>Start</button>
+                <button onClick={handleStopClick} disabled={!isStreaming} className='stop-button'>Stop</button>
               </div>
               <form className='redirect-form' onSubmit={onSubmit}>
                 <button className='connect-button' onClick={() => setClickedButton('Submit')} type="submit">Manage subscriptions</button>
@@ -116,9 +170,8 @@ function CurrentTraffic() {
   return (
     <div>
       <div>
-        <button className='stop-button' onClick={toggleStreaming} style={buttonStyle}>
-          {isStreaming ? 'Stop' : 'Start'}
-        </button>
+        <button onClick={handleStartClick} disabled={isStreaming} className='start-button'>Start</button>
+        <button onClick={handleStopClick} disabled={!isStreaming} className='stop-button'>Stop</button>
       </div>
       <form className='redirect-form' onSubmit={onSubmit}>
         <button className='connect-button' onClick={() => setClickedButton('Submit')} type="submit">Manage subscriptions</button>
@@ -141,7 +194,7 @@ function CurrentTraffic() {
           slotProps={{ toolbar: { printOptions: { disableToolbarButton: true } } }}
           initialState={{
             sorting: {
-              sortModel: [{ field: 'timestamp', sort: 'desc' }],
+              sortModel: [{ field: 'date', sort: 'desc' }],
             },
           }}
           // getRowHeight={() => 'auto'} getEstimatedRowHeight={() => 200}
