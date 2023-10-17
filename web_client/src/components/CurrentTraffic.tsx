@@ -16,46 +16,46 @@ interface QuartData {
   id_stringify: string;
 }
 
-function CurrentTraffic() {
-  
-  const columns = [
-    { field: 'id_stringify', headerName: 'Id', width: 400 },
-    { field: 'payload_stringify', headerName: 'Payload', width: 600 },
-    {
-      field: 'source_date',
-      headerName: 'Source Date',
-      width: 100,
-      type: 'date',
-      valueGetter: (params: GridValueGetterParams<QuartData>) => {
-        if (!params.row.source_date) return null
-        return new Date(params.row.source_date);
-      },
+const columns = [
+  { field: 'id_stringify', headerName: 'Id', width: 400 },
+  { field: 'payload_stringify', headerName: 'Payload', width: 600 },
+  {
+    field: 'source_date',
+    headerName: 'Source Date',
+    width: 100,
+    type: 'date',
+    valueGetter: (params: GridValueGetterParams<QuartData>) => {
+      if (!params.row.source_date) return null
+      return new Date(params.row.source_date);
     },
-    {
-      field: 'source_time',
-      headerName: 'Source Time',
-      width: 150,
-      type: 'time',
-      valueGetter: (params: GridValueGetterParams<QuartData>) => params.row.source_time,
+  },
+  {
+    field: 'source_time',
+    headerName: 'Source Time',
+    width: 150,
+    type: 'time',
+    valueGetter: (params: GridValueGetterParams<QuartData>) => params.row.source_time,
+  },
+  {
+    field: 'date',
+    headerName: 'Date',
+    width: 100,
+    type: 'date',
+    valueGetter: (params: GridValueGetterParams<QuartData>) => {
+      return new Date(params.row.date);
     },
-    {
-      field: 'date',
-      headerName: 'Date',
-      width: 100,
-      type: 'date',
-      valueGetter: (params: GridValueGetterParams<QuartData>) => {
-        return new Date(params.row.date);
-      },
-    },
-    {
-      field: 'time',
-      headerName: 'Time',
-      width: 150,
-      type: 'time',
-      valueGetter: (params: GridValueGetterParams<QuartData>) => params.row.time,
-    },
-    { field: 'type', headerName: 'Type', width: 300 },
-  ];
+  },
+  {
+    field: 'time',
+    headerName: 'Time',
+    width: 150,
+    type: 'time',
+    valueGetter: (params: GridValueGetterParams<QuartData>) => params.row.time,
+  },
+  { field: 'type', headerName: 'Type', width: 300 },
+];
+
+const CurrentTraffic = () => {
   
   const [events, setEvents] = useState<QuartData[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -182,7 +182,7 @@ function CurrentTraffic() {
       </button>
       <h1>Current Traffic</h1>
       {errorMessage && <div>{errorMessage}</div>}
-      <div> 
+      <div style={{ height: '850px' }}> 
         <DataGrid
           rows={events}
           columns={columns}

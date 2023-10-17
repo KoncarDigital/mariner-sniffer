@@ -99,7 +99,7 @@ function RecordedTraffic() {
       </button>
       <h1>Recorded Traffic</h1>
       <input type="file" accept=".csv" onChange={handleFileUpload} />
-      <div>
+      <div style={{ height: '800px' }}>
         <DataGrid
           rows={csvData}
           columns={columns}

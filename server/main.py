@@ -1,7 +1,8 @@
 from connect_to_hat import MarinerClient
 from quart import Quart, jsonify, request, websocket
 from quart_cors import cors
-import json, ast
+import json
+import ast
 import asyncio
 import socket
 
@@ -15,6 +16,7 @@ init_json = {}
 form_data = {}
 # Indicates whether data is currently streaming from the HAT server
 streaming_from_hat = ""
+
 
 @app.route('/', methods=['POST'])
 async def receive_init_message_data_from_frontend():
@@ -51,6 +53,7 @@ async def receive_init_message_data_from_frontend():
             init_json["subscriptions"].append(['*'])
     return jsonify({"message":"Data for init message received successfully"})
 
+
 @app.route('/start', methods=['POST'])
 async def start_streaming():
     try:
@@ -61,6 +64,7 @@ async def start_streaming():
     except Exception as e:
         return str(e), 400
 
+
 @app.route('/stop', methods=['POST'])
 async def stop_streaming():
     try:
@@ -70,6 +74,7 @@ async def stop_streaming():
         return 'Streaming stopped successfully', 200
     except Exception as e:
         return str(e), 400
+
 
 async def put():
     """Connect to server and put message to the queue"""
@@ -109,12 +114,14 @@ async def put():
         if client_socket is not None:
             client_socket.close()
 
+
 async def get():
     """Get message from the queue and send it to frontend using websocket"""
     while True:
         event = await queue.get()
         await websocket.send(event)
         print("Item yielded")
+
 
 async def main():
     """Create two separate threads to put and get from a queue simultaneously"""
@@ -124,6 +131,7 @@ async def main():
     await asyncio.gather(producer_task, consumer_task)
 
     await queue.put(None)
+
 
 @app.websocket('/currenttraffic')
 async def stream_hat_data_to_frontend():

@@ -3,6 +3,14 @@ import '../style/Connect.css';
 import Select from 'react-select';
 import { Link } from "react-router-dom"
 
+const optionList = [
+  { value: "['*']", label: "['*']" },
+  { value: "['eds', 'data', '?']", label: "['eds', 'data', '?']" },
+  { value: "['gui', 'eds', 'system', 'data', '*']", label: "['gui', 'eds', 'system', 'data', '*']" },
+  { value: "['sampling', '?']", label: "['sampling', '?']" },
+  { value: "['gateway', 'gateway', 'modbus_master', '?', '?', '?', '?', '?']", label: "['gateway', 'gateway', 'modbus_master', '?', '?', '?', '?', '?']" },
+];
+
 function Connect() {
   const [customFields, setCustomFields] = useState<string[]>([]);
   const [newField, setNewField] = useState('');
@@ -60,14 +68,6 @@ function Connect() {
     });
   };
 
-  // const handleCustomOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setFormData({
-  //     ...formData,
-  //     selected_option: '',
-  //     last_event_id: e.target.value,
-  //   });
-  // };
-
   const handleHelpTextHover = (hovered: boolean) => {
     setFormData({
       ...formData,
@@ -115,14 +115,6 @@ function Connect() {
       setWait(false);
     }
   };
-
-  const optionList = [
-    { value: "['*']", label: "['*']" },
-    { value: "['eds', 'data', '?']", label: "['eds', 'data', '?']" },
-    { value: "['gui', 'eds', 'system', 'data', '*']", label: "['gui', 'eds', 'system', 'data', '*']" },
-    { value: "['sampling', '?']", label: "['sampling', '?']" },
-    { value: "['gateway', 'gateway', 'modbus_master', '?', '?', '?', '?', '?']", label: "['gateway', 'gateway', 'modbus_master', '?', '?', '?', '?', '?']" },
-  ];
 
   return (
     <div className="container">
@@ -181,33 +173,6 @@ function Connect() {
               All-time events
             </label>
           </div>
-
-          {/* <div>
-            <div className="custom-option-row">
-              <label className="custom-option-label">Custom events</label>
-              <div
-                className="help-button"
-                onMouseEnter={() => handleHelpTextHover(true)}
-                onMouseLeave={() => handleHelpTextHover(false)}
-              >
-                ?
-                {formData.show_help_text && (
-                  <div className="help-text">
-                    Entered data should be three comma-separated integers (e.g. 1,0,0)
-                  </div>
-                )}
-              </div>
-            </div>
-            <input
-              className="custom-option-input"
-              type="text"
-              id="last_event_id"
-              name="last_event_id"
-              value={formData.last_event_id}
-              onChange={handleCustomOptionChange}
-              placeholder="Enter values for server, session, and instance"
-            />
-          </div> */}
         </div>
         <div className="form-group">
           <div className="custom-option-row">
@@ -222,10 +187,8 @@ function Connect() {
               ?
               {formData.show_help_text && (
                 <div className="help-text">
-                  Entered data should match the format of options in the dropdown menu (e.g. ['eds', 'data', '?']).
-                  <br></br>
-                  The string '?' is matched with a single arbitrary string.
-                  <br></br>
+                  Entered data should match the format of options in the dropdown menu (e.g. ['eds', 'data', '?']).<br></br>
+                  The string '?' is matched with a single arbitrary string.<br></br>
                   The string '*' is matched with any number (zero or more) of arbitrary strings.
                 </div>
               )}
@@ -264,8 +227,7 @@ function Connect() {
             ))}
           </ul>
         </div>
-
-        <hr />
+        <hr/>
         {wait ? <span>Wait...</span> : <button className='submit-button' onClick={() => setClickedButton('Submit')} type="submit">Submit</button>}
       </form>
       <div>{error}</div>
