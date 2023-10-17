@@ -1,4 +1,4 @@
-from connect_to_hat import MarinerClient
+from MarinerClient import MarinerClient
 from quart import Quart, jsonify, request, websocket
 from quart_cors import cors
 import json
@@ -18,13 +18,9 @@ form_data = {}
 streaming_from_hat = ""
 
 
-@app.route('/', methods=['POST'])
-async def receive_init_message_data_from_frontend():
-    """Transform form_data to proper init message format"""
-    global form_data
-    global init_json
-    form_data = await request.json
-
+def transform_form_data_to_init_json(form_data):
+    """Transforms data from a form into a specific format
+        that is used to initiate connection to server"""
     init_json["type"] = 'init'
     init_json["client_id"] = form_data['client_id']
     init_json["client_token"] = form_data['client_token']
@@ -45,13 +41,38 @@ async def receive_init_message_data_from_frontend():
         for subscription in form_data['customFields']:
             subscription_as_list = ast.literal_eval(subscription)
             init_json["subscriptions"].append(subscription_as_list)
-    if form_data['selected_subscription'] != None:
+    if form_data['selected_subscription'] is not None:
         for subscription in form_data['selected_subscription']:
             subscription_as_list = ast.literal_eval(subscription['label'])
             init_json["subscriptions"].append(subscription_as_list)
-    if form_data['customFields'][0] == "" and form_data['selected_subscription'] == None:
-            init_json["subscriptions"].append(['*'])
-    return jsonify({"message":"Data for init message received successfully"})
+    if (form_data['customFields'][0] == "" and
+            form_data['selected_subscription'] is None):
+        init_json["subscriptions"].append(['*'])
+
+    return init_json
+
+
+@app.route('/', methods=['POST'])
+async def receive_init_message_data():
+    """Transform form_data to proper init message format
+    form_data is a JSON object consisting of following members:
+        server_ip (string)
+        server_port (string)
+        client_id (string)
+        client_token (string)
+        last_event_id (string)
+        selected_option (string)
+        show_help_text (bool)
+        selected_subscription ((list of JSON-like objects,
+                                each containing two key-value pairs))
+        customFields (list of strings)
+        """
+    global form_data
+    global init_json
+    form_data = await request.json
+    init_json = transform_form_data_to_init_json(form_data)
+
+    return jsonify({"message": "Data for init message received successfully"})
 
 
 @app.route('/start', methods=['POST'])
@@ -91,11 +112,7 @@ async def put():
                                                   socket.SOCK_STREAM)
                     client = MarinerClient(form_data["server_ip"],
                                            form_data["server_port"],
-                                           init_json["client_id"], 
-                                           init_json["client_token"], 
-                                           init_json["subscriptions"], 
-                                           client_socket, 
-                                           init_json["last_event_id"])
+                                           client_socket)
                     await client.connect(init_json)
                 message = await client.message()
                 if message:
@@ -124,12 +141,12 @@ async def get():
 
 
 async def main():
-    """Create two separate threads to put and get from a queue simultaneously"""
+    """Create two separate threads to put and get
+    from a queue simultaneously"""
     producer_task = asyncio.create_task(put())
     consumer_task = asyncio.create_task(get())
 
     await asyncio.gather(producer_task, consumer_task)
-
     await queue.put(None)
 
 
