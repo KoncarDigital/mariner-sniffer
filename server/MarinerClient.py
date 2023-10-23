@@ -4,10 +4,11 @@ import datetime
 
 
 class MarinerClient():
-    def __init__(self, server_ip, server_port, client_socket):
+    def __init__(self, server_ip, server_port, client_socket, queue):
         self.server_ip = server_ip
         self.server_port = server_port
         self.client_socket = client_socket
+        self.queue = queue if queue is not None else []
 
     def send_message_to_server(self, json_message):
         """Transform message to bytes and send it to HAT
@@ -110,3 +111,30 @@ class MarinerClient():
         elif message_type == "ping":
             pong_json = {'type': 'pong'}
             self.send_message_to_server(pong_json)
+
+    async def connect2(self, init_json):
+        """Connect to server"""
+        try:
+            self.client_socket.connect((self.server_ip, int(self.server_port)))
+            self.send_message_to_server(init_json)
+
+        except socket.timeout:
+            self.client_socket.close()
+            raise Exception("Socket timed out.")
+        except Exception as e:
+            self.client_socket.close()
+            print(repr(e))
+
+    async def message2(self):
+        message = self.receive_message_from_server()
+        message_parsed = json.loads(message.decode("utf-8"))
+        message_type = message_parsed['type']
+
+        if message_type == "events":
+            message = self.format_message(message_parsed)
+            await self.queue.put(message['events'])
+            print("Item added to queue")
+        elif message_type == "ping":
+            pong_json = {'type': 'pong'}
+            self.send_message_to_server(pong_json)
+            await self.queue.put("Pong")

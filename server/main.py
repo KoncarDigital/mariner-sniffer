@@ -63,8 +63,8 @@ async def receive_init_message_data():
         last_event_id (string)
         selected_option (string)
         show_help_text (bool)
-        selected_subscription ((list of JSON-like objects,
-                                each containing two key-value pairs))
+        selected_subscription (list of JSON-like objects,
+                                each containing two key-value pairs)
         customFields (list of strings)
         """
     global form_data
@@ -72,7 +72,7 @@ async def receive_init_message_data():
     form_data = await request.json
     init_json = transform_form_data_to_init_json(form_data)
 
-    return jsonify({"message": "Data for init message received successfully"})
+    return jsonify({"message": "Init message data received successfully"})
 
 
 @app.route('/start', methods=['POST'])
@@ -81,6 +81,7 @@ async def start_streaming():
         global streaming_from_hat
         data = await request.json
         streaming_from_hat = data['action']
+        print(streaming_from_hat)
         return 'Streaming started successfully', 200
     except Exception as e:
         return str(e), 400
@@ -150,9 +151,27 @@ async def main():
     await queue.put(None)
 
 
+async def main2():
+
+    queue = asyncio.Queue(maxsize=10000)
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client = MarinerClient(form_data["server_ip"], form_data["server_port"],
+                           client_socket, queue)
+    await client.connect2(init_json)
+    streaming_from_hat = "start"
+    while streaming_from_hat == "start":
+        await client.message2()
+        events = await queue.get()
+        if events != "Pong":
+            for event in events:
+                await websocket.send(json.dumps(event))
+                print("Item yielded")
+
+
 @app.websocket('/currenttraffic')
 async def stream_hat_data_to_frontend():
-    return await main()
+    return await main2()
 
 if __name__ == '__main__':
     app.run()
