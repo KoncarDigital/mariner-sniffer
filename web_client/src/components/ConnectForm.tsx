@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
-import '../style/Connect.css';
 import Select from 'react-select';
-import { Link } from "react-router-dom"
+import { optionList } from '../utils/optionList';
 
-const optionList = [
-  { value: "['*']", label: "['*']" },
-  { value: "['eds', 'data', '?']", label: "['eds', 'data', '?']" },
-  { value: "['gui', 'eds', 'system', 'data', '*']", label: "['gui', 'eds', 'system', 'data', '*']" },
-  { value: "['sampling', '?']", label: "['sampling', '?']" },
-  { value: "['gateway', 'gateway', 'modbus_master', '?', '?', '?', '?', '?']", label: "['gateway', 'gateway', 'modbus_master', '?', '?', '?', '?', '?']" },
-];
-
-function Connect() {
+  
+const ConnectForm = () => {
   const [customFields, setCustomFields] = useState<string[]>([]);
   const [newField, setNewField] = useState('');
+
   const initialFormData = {
     server_ip: '',
     server_port: '',
@@ -27,7 +20,6 @@ function Connect() {
   };
 
   const [formData, setFormData] = useState(initialFormData);
-  const [error, setError] = useState('');
   const [wait, setWait] = useState(false);
   const [clickedButton, setClickedButton] = useState('');
 
@@ -110,46 +102,41 @@ function Connect() {
         console.error('Error sending data');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error sending data');
     } finally {
       setWait(false);
     }
   };
 
   return (
-    <div className="container">
-      <button className='recorded-traffic-button-2'>
-        <Link to="/recordedtraffic" className='link'>Upload CSV file</Link>
-      </button>
-      <h1>Connect</h1>
-      <form className='connect-form' onSubmit={onSubmit}>
-      <div className="form-group">
-          <label htmlFor="server_ip">Server Ip</label>
-          <input
+    <form className='connect-form' onSubmit={onSubmit}>
+        <div className="form-group">
+            <label htmlFor="server_ip">Server Ip</label>
+            <input
             required={true}
             type="text"
             id="server_ip"
             name="server_ip"
             value={formData.server_ip}
             onChange={handleInputChange}
-          />
+            />
         </div>
         <div className="form-group">
-          <label htmlFor="server_port">Server Port</label>
-          <input
+            <label htmlFor="server_port">Server Port</label>
+            <input
             required={true}
             type="text"
             id="server_port"
             name="server_port"
             value={formData.server_port}
             onChange={handleInputChange}
-          />
+            />
         </div>
         <label htmlFor="last_event_id">Last Event Id</label>
         <div className="form-group special-group">
-          <div className="radio-options">
+            <div className="radio-options">
             <label htmlFor="none" className="special-label">
-              <input
+                <input
                 className="radio-input"
                 type="radio"
                 id="none"
@@ -157,11 +144,11 @@ function Connect() {
                 value="Current events"
                 checked={formData.selected_option === 'Current events'}
                 onChange={handleOptionChange}
-              />
-              Current events
+                />
+                Current events
             </label>
             <label htmlFor="default" className="special-label">
-              <input
+                <input
                 className="radio-input"
                 type="radio"
                 id="default"
@@ -169,70 +156,68 @@ function Connect() {
                 value="All-time events"
                 checked={formData.selected_option === 'All-time events'}
                 onChange={handleOptionChange}
-              />
-              All-time events
+                />
+                All-time events
             </label>
-          </div>
+            </div>
         </div>
         <div className="form-group">
-          <div className="custom-option-row">
+            <div className="custom-option-row">
             <label htmlFor="dropdown" className="custom-option-label">
-              Subscriptions
-              </label>
+                Subscriptions
+                </label>
             <div
-              className="help-button"
-              onMouseEnter={() => handleHelpTextHover(true)}
-              onMouseLeave={() => handleHelpTextHover(false)}
+                className="help-button"
+                onMouseEnter={() => handleHelpTextHover(true)}
+                onMouseLeave={() => handleHelpTextHover(false)}
             >
-              ?
-              {formData.show_help_text && (
+                ?
+                {formData.show_help_text && (
                 <div className="help-text">
-                  Entered data should match the format of options in the dropdown menu (e.g. ['eds', 'data', '?']).<br></br>
-                  The string '?' is matched with a single arbitrary string.<br></br>
-                  The string '*' is matched with any number (zero or more) of arbitrary strings.
+                    Entered data should match the format of options in the dropdown menu (e.g. ['eds', 'data', '?']).<br></br>
+                    The string '?' is matched with a single arbitrary string.<br></br>
+                    The string '*' is matched with any number (zero or more) of arbitrary strings.
                 </div>
-              )}
+                )}
             </div>
-          </div>
-          <div className="dropdown-container">
+            </div>
+            <div className="dropdown-container">
             <Select
-              options={optionList}
-              placeholder="Select subscriptions"
-              value={formData.selected_subscription}
-              onChange={handleSelect}
-              isSearchable={true}
-              isMulti
+                options={optionList}
+                placeholder="Select subscriptions"
+                value={formData.selected_subscription}
+                onChange={handleSelect}
+                isSearchable={true}
+                isMulti
             />
-          </div>
-          <br />
-          <div>
+            </div>
+            <br />
+            <div>
             <input
-              type="text"
-              value={newField}
-              onChange={(e) => setNewField(e.target.value)}
-              placeholder="Enter custom subscription"
+                type="text"
+                value={newField}
+                onChange={(e) => setNewField(e.target.value)}
+                placeholder="Enter custom subscription"
             />
             <button onClick={addCustomField} className="small-button" type="button">
-              Add
+                Add
             </button>
-          </div>
-          <ul>
+            </div>
+            <ul>
             {customFields.map((field, index) => (
-              <li key={index}>
+                <li key={index}>
                 {field}
                 <button onClick={() => removeCustomField(index)} className="small-button" type="button">
-                  Remove
+                    Remove
                 </button>
-              </li>
+                </li>
             ))}
-          </ul>
+            </ul>
         </div>
         <hr/>
         {wait ? <span>Wait...</span> : <button className='submit-button' onClick={() => setClickedButton('Submit')} type="submit">Submit</button>}
-      </form>
-      <div>{error}</div>
-    </div>
+    </form>
   );
-}
+};
 
-export default Connect;
+export default ConnectForm;

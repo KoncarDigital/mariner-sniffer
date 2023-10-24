@@ -216,3 +216,11 @@ select {
     text-decoration: none;
     color: white
 }
+
+.error-message {
+    color: red;
+    background-color: #ffe4e4;
+    padding: 8px;
+    font-weight: bold;
+  }
+  

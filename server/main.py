@@ -77,11 +77,11 @@ async def receive_init_message_data():
 
 @app.route('/start', methods=['POST'])
 async def start_streaming():
+    """After clicking on Start, signal to start streaming"""
     try:
         global streaming_from_hat
         data = await request.json
         streaming_from_hat = data['action']
-        print(streaming_from_hat)
         return 'Streaming started successfully', 200
     except Exception as e:
         return str(e), 400
@@ -89,6 +89,7 @@ async def start_streaming():
 
 @app.route('/stop', methods=['POST'])
 async def stop_streaming():
+    """After clicking on Stop, signal to stop streaming"""
     try:
         global streaming_from_hat
         data = await request.json
@@ -151,26 +152,37 @@ async def main():
     await queue.put(None)
 
 
+# Dodaj Start (Stop funkcionira)
+# Ne funkcionira za All events (yielda ih se dio pa stane)
 async def main2():
+    """Connect to server and stream server data to frontend"""
+    global streaming_from_hat
+    try:
+        queue = asyncio.Queue(maxsize=10000)
 
-    queue = asyncio.Queue(maxsize=10000)
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client = MarinerClient(form_data["server_ip"],
+                               form_data["server_port"],
+                               client_socket, queue)
+        await client.connect2(init_json)
+        streaming_from_hat = "start"
+        while streaming_from_hat == "start":
+            await client.message2()
+            events = await queue.get()
+            if events != "Pong":
+                for event in events:
+                    await websocket.send(json.dumps(event))
+                    print("Item yielded")
 
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client = MarinerClient(form_data["server_ip"], form_data["server_port"],
-                           client_socket, queue)
-    await client.connect2(init_json)
-    streaming_from_hat = "start"
-    while streaming_from_hat == "start":
-        await client.message2()
-        events = await queue.get()
-        if events != "Pong":
-            for event in events:
-                await websocket.send(json.dumps(event))
-                print("Item yielded")
+    except Exception as e:
+        print("Exception:", e)
+        await queue.put(json.dumps("Socket timed out."))
+        if client_socket is not None:
+            client_socket.close()
 
 
 @app.websocket('/currenttraffic')
-async def stream_hat_data_to_frontend():
+async def stream():
     return await main2()
 
 if __name__ == '__main__':
