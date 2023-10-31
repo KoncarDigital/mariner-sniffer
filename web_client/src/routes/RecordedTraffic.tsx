@@ -12,7 +12,7 @@ const RecordedTraffic = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target?.files?.[0];
   
-    if (file) {
+    if (file && file.name.endsWith('.csv')) {
       Papa.parse(file, {
         header: true,
         dynamicTyping: true,
@@ -28,20 +28,26 @@ const RecordedTraffic = () => {
             type: row.Type,
           }));
   
-          const dataWithIds = mappedData.map((row, index) => ({
-            ...row,
-            id: index.toString(),
-          }));
-  
-          setCSVData(dataWithIds);
-          setError(null)
+
+          if (mappedData.some((row) => row.id_stringify === undefined)) {
+            setError('Error: Invalid header. Check header format.');
+          } else {
+            const dataWithIds = mappedData.map((row, index) => ({
+              ...row,
+              id: index.toString(),
+            }));
+
+            setCSVData(dataWithIds);
+            setError(null);
+          }
         },
-        // Neispravan error handling npr. kad se uploada csv bez row id
         error: (error) => {
           console.error('CSV parsing error:', error);
-          setError('Error parsing CSV file. Please check the file format.');
+          setError('Error parsing CSV file.');
         },
       });
+    } else {
+      setError('Invalid file format. Please upload a CSV file.');
     }
   };
   

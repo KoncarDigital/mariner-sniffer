@@ -28,10 +28,10 @@ const CurrentTraffic = () => {
       if (response.ok) {
         setIsStreaming(true);
       } else {
-        setErrorMessage('Error sending data');
+        setErrorMessage('Error sending data. Check if backend is running.');
       }
     } catch (error) {
-      setErrorMessage('Error sending data');
+      setErrorMessage('Error sending data. Check if backend is running.');
     }
   };
 
@@ -52,10 +52,10 @@ const CurrentTraffic = () => {
       if (response.ok) {
         setIsStreaming(false);
       } else {
-        setErrorMessage('Error sending data');
+        setErrorMessage('Error sending data. Check if backend is running.');
       }
     } catch (error) {
-      setErrorMessage('Error sending data');
+      setErrorMessage('Error sending data. Check if backend is running.');
     }
   };
 

@@ -166,7 +166,7 @@ const ConnectForm = () => {
             <label htmlFor="dropdown" className="custom-option-label">
                 Subscriptions
                 </label>
-            <div
+            {/* <div
                 className="help-button"
                 onMouseEnter={() => handleHelpTextHover(true)}
                 onMouseLeave={() => handleHelpTextHover(false)}
@@ -179,7 +179,7 @@ const ConnectForm = () => {
                     The string '*' is matched with any number (zero or more) of arbitrary strings.
                 </div>
                 )}
-            </div>
+            </div> */}
             </div>
             <div className="dropdown-container">
             <Select
@@ -191,7 +191,7 @@ const ConnectForm = () => {
                 isMulti
             />
             </div>
-            <br />
+            {/* <br />
             <div>
             <input
                 type="text"
@@ -212,7 +212,7 @@ const ConnectForm = () => {
                 </button>
                 </li>
             ))}
-            </ul>
+            </ul> */}
         </div>
         <hr/>
         {wait ? <span>Wait...</span> : <button className='submit-button' onClick={() => setClickedButton('Submit')} type="submit">Submit</button>}

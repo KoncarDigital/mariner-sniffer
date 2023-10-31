@@ -4,7 +4,7 @@ from quart_cors import cors
 import json
 import ast
 import asyncio
-import socket
+
 
 app = Quart(__name__)
 cors(app)
@@ -14,8 +14,8 @@ queue = asyncio.Queue(maxsize=10)
 init_json = {}
 # Data obtained from a frontend form on the /connect route
 form_data = {}
-# Indicates whether data is currently streaming from the HAT server
-streaming_from_hat = ""
+
+streaming_event = asyncio.Event()
 
 
 def transform_form_data_to_init_json(form_data):
@@ -79,9 +79,7 @@ async def receive_init_message_data():
 async def start_streaming():
     """After clicking on Start, signal to start streaming"""
     try:
-        global streaming_from_hat
-        data = await request.json
-        streaming_from_hat = data['action']
+        streaming_event.set()
         return 'Streaming started successfully', 200
     except Exception as e:
         return str(e), 400
@@ -91,83 +89,24 @@ async def start_streaming():
 async def stop_streaming():
     """After clicking on Stop, signal to stop streaming"""
     try:
-        global streaming_from_hat
-        data = await request.json
-        streaming_from_hat = data['action']
+        streaming_event.clear()
         return 'Streaming stopped successfully', 200
     except Exception as e:
         return str(e), 400
 
 
-async def put():
-    """Connect to server and put message to the queue"""
-    global streaming_from_hat
-    global form_data
-    global init_json
-    client_socket = None
-
-    try:
-        while True:
-            if streaming_from_hat == 'start':
-                if client_socket is None:
-                    client_socket = socket.socket(socket.AF_INET,
-                                                  socket.SOCK_STREAM)
-                    client = MarinerClient(form_data["server_ip"],
-                                           form_data["server_port"],
-                                           client_socket)
-                    await client.connect(init_json)
-                message = await client.message()
-                if message:
-                    for event in message:
-                        await queue.put(json.dumps(event))
-                        print("Item added to queue")
-            else:
-                if client_socket is not None:
-                    client_socket.close()
-                    client_socket = None
-                await asyncio.sleep(1)
-
-    except Exception as e:
-        print("Exception:", e)
-        await queue.put(json.dumps("Socket timed out."))
-        if client_socket is not None:
-            client_socket.close()
-
-
-async def get():
-    """Get message from the queue and send it to frontend using websocket"""
-    while True:
-        event = await queue.get()
-        await websocket.send(event)
-        print("Item yielded")
-
-
 async def main():
-    """Create two separate threads to put and get
-    from a queue simultaneously"""
-    producer_task = asyncio.create_task(put())
-    consumer_task = asyncio.create_task(get())
-
-    await asyncio.gather(producer_task, consumer_task)
-    await queue.put(None)
-
-
-# Dodaj Start (Stop funkcionira)
-# Ne funkcionira za All events (yielda ih se dio pa stane)
-async def main2():
     """Connect to server and stream server data to frontend"""
-    global streaming_from_hat
     try:
-        queue = asyncio.Queue(maxsize=10000)
+        queue = asyncio.Queue(maxsize=10_000)
 
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client = MarinerClient(form_data["server_ip"],
                                form_data["server_port"],
-                               client_socket, queue)
-        await client.connect2(init_json)
-        streaming_from_hat = "start"
-        while streaming_from_hat == "start":
-            await client.message2()
+                               queue)
+        await client.connect(init_json)
+        while True:
+            await streaming_event.wait()
+            await client.message()
             events = await queue.get()
             if events != "Pong":
                 for event in events:
@@ -176,14 +115,12 @@ async def main2():
 
     except Exception as e:
         print("Exception:", e)
-        await queue.put(json.dumps("Socket timed out."))
-        if client_socket is not None:
-            client_socket.close()
+        await websocket.send(json.dumps("Socket timed out."))
 
 
 @app.websocket('/currenttraffic')
 async def stream():
-    return await main2()
+    return await main()
 
 if __name__ == '__main__':
     app.run()
